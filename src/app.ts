@@ -14,4 +14,6 @@ app.listen(PORT, () => {
 });
 
 // подключаемся к серверу MongoDB
-mongoose.connect("mongodb://localhost:27017/sport");
+mongoose.connect("mongodb://localhost:27017/users").then(() => {
+  console.log("db cconnected");
+});
