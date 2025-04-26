@@ -1,5 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
+import userRoutes from "./routes/users";
 
 const { PORT = 3000 } = process.env;
 
@@ -12,9 +13,4 @@ app.listen(PORT, () => {
 // подключаемся к серверу MongoDB
 mongoose.connect("mongodb://localhost:27017/sport");
 
-app.use("/", (req, res) => {
-  res.status(200);
-  res.send({
-    message: "Hi wordl",
-  });
-});
+app.use("/", userRoutes);
