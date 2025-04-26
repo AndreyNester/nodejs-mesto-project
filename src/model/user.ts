@@ -24,5 +24,5 @@ const userSchema = new mongoose.Schema<IUser>({
     required: true,
   },
 });
-
+export type { IUser };
 export default mongoose.model<IUser>("user", userSchema);
