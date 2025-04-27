@@ -51,7 +51,7 @@ export const createUser: RequestHandler<
       ...req.body,
     });
 
-    res.status(200).send({
+    res.status(201).send({
       about,
       avatar,
       name,
