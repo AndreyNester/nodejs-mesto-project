@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(
   (req: Request, res: Response<unknown, IAuthContext>, next: NextFunction) => {
     res.locals.user = {
-      _id: "680ce67e68cdbbb354bbd455", // вставьте сюда _id созданного в предыдущем пункте пользователя
+      _id: "680ce67e68cdbbb354bbd455",
     };
     next();
   }

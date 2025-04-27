@@ -8,7 +8,10 @@ import {
   IGetUsersResItem,
 } from "./users.interface";
 
-export const getUsers = async (req: Request, res: Response) => {
+export const getUsers: RequestHandler<
+  unknown,
+  TGetUsersResponse | { message: string }
+> = async (_req, res) => {
   try {
     const users = await userModel.find({});
     const preparedResponse: TGetUsersResponse = users.map<IGetUsersResItem>(
@@ -22,8 +25,7 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const getUserById: RequestHandler<
   { id?: string },
-  IGetUserByIdResponse | { message: string },
-  unknown
+  IGetUserByIdResponse | { message: string }
 > = async (req, res) => {
   const { id: IdInParam } = req.params;
   try {
