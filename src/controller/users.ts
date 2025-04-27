@@ -1,4 +1,4 @@
-import { RequestHandler, Request, Response } from "express";
+import { RequestHandler } from "express";
 import userModel from "../model/user";
 import {
   ICreateuserRequest,
