@@ -4,16 +4,13 @@ import { ICard } from "./card.interface";
 const cardSchema = new mongoose.Schema<ICard>({
   createdAt: {
     type: mongoose.Schema.Types.Date,
-    required: Date.now(),
+    default: Date.now,
   },
-  likes: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
-      default: [],
-      required: true,
-    },
-  ],
+  likes: {
+    type: [mongoose.Schema.Types.ObjectId],
+    default: [],
+    ref: "user",
+  },
   link: {
     type: String,
     required: true,
@@ -22,6 +19,7 @@ const cardSchema = new mongoose.Schema<ICard>({
     type: String,
     minlength: 2,
     maxlength: 30,
+    required: true,
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
