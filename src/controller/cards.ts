@@ -3,16 +3,12 @@ import { ICard } from "../model/card.interface";
 import cardModel from "../model/card";
 import userModel from "../model/user";
 import { IAuthContext } from "app";
-
-interface IGetCard extends ICard {
-  id: string;
-}
-type TGetCardResponse = IGetCard[];
-
-interface ICreateCardRequest extends Partial<Pick<ICard, "name" | "link">> {}
-interface ICreateCardResponse extends ICard {
-  id: string;
-}
+import {
+  ICreateCardRequest,
+  ICreateCardResponse,
+  TGetCardResponse,
+  IGetCard,
+} from "./cards.interface";
 
 export const getCards: RequestHandler<
   unknown,
@@ -72,6 +68,24 @@ export const createCard: RequestHandler<
   }
 };
 
-export const deleteCard: RequestHandler = (req, res) => {
-  res.status(200).send("delete card");
+export const deleteCard: RequestHandler<
+  { id?: string },
+  {
+    message: string;
+  }
+> = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) throw new Error("Не передан ID");
+    const deletedCard = await cardModel.findByIdAndDelete(id);
+    if (!deletedCard) throw new Error("Такого человека не существует");
+    res.status(200).send({
+      message: "Карточка успешно удалена",
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({
+      message: "Что-то пошло не так",
+    });
+  }
 };
