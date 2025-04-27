@@ -7,6 +7,8 @@ import {
   ICreateCardResponse,
   TGetCardResponse,
   IGetCard,
+  ILikeCardResponse,
+  IUnlikeCardResponse,
 } from "./cards.interface";
 
 export const getCards: RequestHandler<
@@ -86,5 +88,51 @@ export const deleteCard: RequestHandler<
     res.status(500).send({
       message: "Что-то пошло не так",
     });
+  }
+};
+export const likeCard: RequestHandler<
+  { cardId?: string },
+  ILikeCardResponse | { message: string },
+  unknown,
+  IAuthContext
+> = async (req, res) => {
+  try {
+    const { cardId } = req.params;
+
+    if (!cardId) throw new Error("Не переда ID карточки");
+
+    const { _id } = res.locals.user;
+    const likedCard = await cardModel.findByIdAndUpdate(
+      cardId,
+      { $addToSet: { likes: _id } },
+      { new: true }
+    );
+    if (!likedCard) throw new Error("Нет такой карточки");
+
+    res.status(200).send({
+      createdAt: likedCard.createdAt,
+      id: likedCard.id,
+      likes: likedCard.likes,
+      link: likedCard.link,
+      name: likedCard.name,
+      owner: likedCard.owner,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ message: "Что-то пошло не так =(" });
+  }
+};
+
+export const unlikeCard: RequestHandler<
+  unknown,
+  IUnlikeCardResponse | { message: string },
+  unknown,
+  { cardId: string },
+  IAuthContext
+> = async (req, res) => {
+  try {
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ message: "Что-то пошло не так =(" });
   }
 };

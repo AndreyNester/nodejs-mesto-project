@@ -10,9 +10,16 @@ interface ICreateCardResponse extends ICard {
   id: string;
 }
 
+interface ILikeCardResponse extends ICard {
+  id: string;
+}
+
+interface IUnlikeCardResponse extends ICard {}
 export type {
   IGetCard,
   TGetCardResponse,
   ICreateCardRequest,
   ICreateCardResponse,
+  ILikeCardResponse,
+  IUnlikeCardResponse,
 };
