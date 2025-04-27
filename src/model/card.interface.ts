@@ -1,10 +1,10 @@
-import { Schema } from "mongoose";
+import mongoose from "mongoose";
 
 interface ICard {
   name: string;
   link: string;
-  owner: Schema.Types.ObjectId;
-  likes: Schema.Types.ObjectId[];
+  owner: mongoose.Types.ObjectId;
+  likes: mongoose.Types.ObjectId[];
   createdAt: Date;
 }
 

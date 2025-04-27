@@ -10,6 +10,7 @@ import {
   ILikeCardResponse,
   IUnlikeCardResponse,
 } from "./cards.interface";
+import mongoose from "mongoose";
 
 export const getCards: RequestHandler<
   unknown,
@@ -94,6 +95,7 @@ export const likeCard: RequestHandler<
   { cardId?: string },
   ILikeCardResponse | { message: string },
   unknown,
+  unknown,
   IAuthContext
 > = async (req, res) => {
   try {
@@ -124,13 +126,37 @@ export const likeCard: RequestHandler<
 };
 
 export const unlikeCard: RequestHandler<
-  unknown,
+  { cardId?: string },
   IUnlikeCardResponse | { message: string },
   unknown,
-  { cardId: string },
+  unknown,
   IAuthContext
 > = async (req, res) => {
   try {
+    const { cardId } = req.params;
+
+    if (!cardId) throw new Error("Не передан ID карточки");
+
+    const { _id } = res.locals.user;
+
+    const unlikedCard = await cardModel.findByIdAndUpdate(
+      cardId,
+      {
+        $pull: {
+          likes: _id,
+        },
+      },
+      { new: true }
+    );
+    if (!unlikedCard) throw new Error("нет такой карточки");
+
+    res.status(200).send({
+      createdAt: unlikedCard.createdAt,
+      likes: unlikedCard.likes,
+      link: unlikedCard.link,
+      name: unlikedCard.name,
+      owner: unlikedCard.owner,
+    });
   } catch (err) {
     console.log(err);
     res.status(500).send({ message: "Что-то пошло не так =(" });

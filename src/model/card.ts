@@ -7,9 +7,8 @@ const cardSchema = new mongoose.Schema<ICard>({
     default: Date.now,
   },
   likes: {
-    type: [mongoose.Schema.Types.ObjectId],
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
     default: [],
-    ref: "user",
   },
   link: {
     type: String,
