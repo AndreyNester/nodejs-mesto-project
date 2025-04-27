@@ -9,7 +9,7 @@ interface IGetCard extends ICard {
 }
 type TGetCardResponse = IGetCard[];
 
-interface ICreateCardRequest extends Pick<ICard, "name" | "link"> {}
+interface ICreateCardRequest extends Partial<Pick<ICard, "name" | "link">> {}
 interface ICreateCardResponse extends ICard {
   id: string;
 }
@@ -37,32 +37,38 @@ export const getCards: RequestHandler<
 };
 export const createCard: RequestHandler<
   unknown,
-  /*ICreateCardResponse*/ string,
+  ICreateCardResponse | { message: string },
   ICreateCardRequest,
   unknown,
   IAuthContext
 > = async (req, res) => {
   try {
     const { link, name } = req.body;
-    const { user } = res.locals;
-    if (!(name && link)) throw new Error("не все параматры переланы");
+    if (!(link && name)) throw new Error("Не все параметры переданы");
 
-    const authedUser = await userModel.findById(user._id);
-    if (!authedUser?._id) throw new Error("Нет аторизации");
+    const { _id } = res.locals.user;
+    const authUser = await userModel.findById(_id);
+    if (!authUser?._id) throw new Error("Нет такого пользователя");
 
-    const createdCard = await cardModel.create({
+    const { createdAt, likes, id, owner } = await cardModel.create({
       name,
+      owner: authUser._id,
       link,
-      owner: authedUser._id,
-      createdAt: Date.now(),
     });
 
-    console.log(createdCard);
-    res.status(200).send("hella");
+    res.status(201).send({
+      createdAt,
+      id,
+      likes,
+      link,
+      name,
+      owner,
+    });
   } catch (err) {
     console.log(err);
-
-    res.status(500).send("все плохл");
+    res.status(500).send({
+      message: "Что-то пошло не так =(",
+    });
   }
 };
 
