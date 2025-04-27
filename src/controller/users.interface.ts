@@ -19,6 +19,11 @@ interface IUpdateUserResponse extends IUser {
   id: string;
 }
 
+interface IUpdateAvatarRequest extends Partial<Pick<IUser, "avatar">> {}
+interface IUpdateAvatarResponse extends IUser {
+  id: string;
+}
+
 export type {
   ICreateuserResponse,
   ICreateuserRequest,
@@ -27,4 +32,6 @@ export type {
   IGetUsersResItem,
   IUpdateUserRequest,
   IUpdateUserResponse,
+  IUpdateAvatarRequest,
+  IUpdateAvatarResponse,
 };

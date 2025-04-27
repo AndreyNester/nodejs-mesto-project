@@ -8,6 +8,8 @@ import {
   IGetUsersResItem,
   IUpdateUserRequest,
   IUpdateUserResponse,
+  IUpdateAvatarRequest,
+  IUpdateAvatarResponse,
 } from "./users.interface";
 import { IAuthContext } from "app";
 
@@ -103,10 +105,37 @@ export const updateUser: RequestHandler<
   }
 };
 
-export const updateAvatar: RequestHandler = async (req, res) => {
+export const updateAvatar: RequestHandler<
+  unknown,
+  IUpdateAvatarResponse | { message: string },
+  IUpdateAvatarRequest,
+  unknown,
+  IAuthContext
+> = async (req, res) => {
   try {
+    const { avatar } = req.body;
+
+    if (!avatar) throw new Error("Не переданы все параметры");
+
+    const { _id } = res.locals.user;
+    const userWithUpdateddAvatar = await userModel.findByIdAndUpdate(
+      _id,
+      { $set: { avatar } },
+      { new: true }
+    );
+
+    if (!userWithUpdateddAvatar) throw new Error("Нет такого пользователя");
+
+    res.status(200).send({
+      about: userWithUpdateddAvatar.about,
+      avatar: userWithUpdateddAvatar.avatar,
+      id: userWithUpdateddAvatar.id,
+      name: userWithUpdateddAvatar.name,
+    });
   } catch (err) {
     console.log(err);
-    res.status(500).send("Что-то пошло не так =(");
+    res.status(500).send({
+      message: "Что-то пошло не так =(",
+    });
   }
 };
