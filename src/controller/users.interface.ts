@@ -14,10 +14,17 @@ interface IGetUsersResItem extends IUser {
 }
 type TGetUsersResponse = IGetUsersResItem[];
 
+interface IUpdateUserRequest extends Partial<Pick<IUser, "name" | "about">> {}
+interface IUpdateUserResponse extends IUser {
+  id: string;
+}
+
 export type {
   ICreateuserResponse,
   ICreateuserRequest,
   IGetUserByIdResponse,
   TGetUsersResponse,
   IGetUsersResItem,
+  IUpdateUserRequest,
+  IUpdateUserResponse,
 };

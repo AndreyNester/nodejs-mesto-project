@@ -12,4 +12,10 @@ router.post("/cards", createCard);
 // DELETE /cards/:cardId — удаляет карточку по идентификатору
 router.delete("/cards/:id", deleteCard);
 
+// PUT /cards/:cardId/likes — поставить лайк карточке
+router.put("/cards/:cardId/likes");
+
+// DELETE /cards/:cardId/likes — убрать лайк с карточки
+router.delete("/cards/:cardId/likes");
+
 export default router;

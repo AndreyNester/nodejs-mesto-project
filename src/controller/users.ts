@@ -1,12 +1,15 @@
 import { RequestHandler } from "express";
-import userModel from "../model/user";
+import userModel, { IUser } from "../model/user";
 import {
   ICreateuserRequest,
   ICreateuserResponse,
   TGetUsersResponse,
   IGetUserByIdResponse,
   IGetUsersResItem,
+  IUpdateUserRequest,
+  IUpdateUserResponse,
 } from "./users.interface";
+import { IAuthContext } from "app";
 
 export const getUsers: RequestHandler<
   unknown,
@@ -60,5 +63,50 @@ export const createUser: RequestHandler<
   } catch (err) {
     console.log(err);
     res.status(500).send({ message: "Что то пошло не так =(" });
+  }
+};
+
+export const updateUser: RequestHandler<
+  unknown,
+  IUpdateUserResponse | { message: string },
+  IUpdateUserRequest,
+  unknown,
+  IAuthContext
+> = async (req, res) => {
+  try {
+    const { name, about } = req.body;
+    if (!(about && name)) throw new Error("Не все параметры переданы");
+
+    const { _id } = res.locals.user;
+    const updatedUser = await userModel.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          about,
+          name,
+        },
+      },
+      { new: true }
+    );
+    if (!updatedUser) throw new Error("Нет такого челоека");
+    res.status(200).send({
+      about: updatedUser.about,
+      avatar: updatedUser.avatar,
+      id: updatedUser.id,
+      name: updatedUser.name,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({
+      message: "Что-то пошло не так =(",
+    });
+  }
+};
+
+export const updateAvatar: RequestHandler = async (req, res) => {
+  try {
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Что-то пошло не так =(");
   }
 };
