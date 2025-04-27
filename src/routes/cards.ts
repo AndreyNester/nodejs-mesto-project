@@ -1,5 +1,11 @@
 import { Router } from "express";
-import { createCard, deleteCard, getCards } from "../controller/cards";
+import {
+  createCard,
+  deleteCard,
+  getCards,
+  likeCard,
+  unlikeCard,
+} from "../controller/cards";
 
 const router = Router();
 
@@ -13,9 +19,9 @@ router.post("/cards", createCard);
 router.delete("/cards/:id", deleteCard);
 
 // PUT /cards/:cardId/likes — поставить лайк карточке
-router.put("/cards/:cardId/likes");
+router.put("/cards/:cardId/likes", likeCard);
 
 // DELETE /cards/:cardId/likes — убрать лайк с карточки
-router.delete("/cards/:cardId/likes");
+router.delete("/cards/:cardId/likes", unlikeCard);
 
 export default router;
