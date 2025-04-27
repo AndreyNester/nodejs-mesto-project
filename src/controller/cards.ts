@@ -1,5 +1,4 @@
 import { RequestHandler } from "express";
-import { ICard } from "../model/card.interface";
 import cardModel from "../model/card";
 import userModel from "../model/user";
 import { IAuthContext } from "app";
