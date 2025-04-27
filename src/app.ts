@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(
   (req: Request, res: Response<unknown, IAuthContext>, next: NextFunction) => {
     res.locals.user = {
-      _id: "680ce67e68cdbbb354bbd455",
+      _id: "680df2c96e9c021488f5fd3c",
     };
     next();
   }
@@ -31,6 +31,6 @@ app.listen(PORT, () => {
 });
 
 // подключаемся к серверу MongoDB
-mongoose.connect("mongodb://localhost:27017/users").then(() => {
+mongoose.connect("mongodb://localhost:27017/mydb").then(() => {
   console.log("db cconnected");
 });
