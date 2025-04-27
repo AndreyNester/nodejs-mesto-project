@@ -1,4 +1,4 @@
-import { RequestHandler } from "express";
+import { RequestHandler, Request, Response } from "express";
 import userModel from "../model/user";
 import {
   ICreateuserRequest,
@@ -8,11 +8,7 @@ import {
   IGetUsersResItem,
 } from "./users.interface";
 
-export const getUsers: RequestHandler<
-  unknown,
-  TGetUsersResponse | { message: string },
-  unknown
-> = async (req, res) => {
+export const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await userModel.find({});
     const preparedResponse: TGetUsersResponse = users.map<IGetUsersResItem>(
