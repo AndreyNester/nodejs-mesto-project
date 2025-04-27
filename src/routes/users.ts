@@ -1,4 +1,10 @@
-import { getUsers, createUser, getUserById } from "../controller/users";
+import {
+  getUsers,
+  createUser,
+  getUserById,
+  updateAvatar,
+  updateUser,
+} from "../controller/users";
 import { Router } from "express";
 
 const route = Router();
@@ -11,5 +17,11 @@ route.get("/users/:id", getUserById);
 
 // POST /users — создаёт пользователя
 route.post("/users", createUser);
+
+// PATCH /users/me — обновляет профиль
+route.patch("/users/me", updateUser);
+
+// PATCH /users/me/avatar — обновляет аватар
+route.patch("/users/me/avatar", updateAvatar);
 
 export default route;
