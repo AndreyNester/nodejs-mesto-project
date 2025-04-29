@@ -12,11 +12,12 @@ import {
   IUpdateAvatarResponse,
 } from "./users.interface";
 import { IAuthContext } from "app";
+import { NotFoundError, BadRequestError } from "../config";
 
 export const getUsers: RequestHandler<
   unknown,
   TGetUsersResponse | { message: string }
-> = async (_req, res) => {
+> = async (_req, res, next) => {
   try {
     const users = await userModel.find({});
     const preparedResponse: TGetUsersResponse = users.map<IGetUsersResItem>(
@@ -24,25 +25,25 @@ export const getUsers: RequestHandler<
     );
     res.status(200).send(preparedResponse);
   } catch (err) {
-    res.status(500).send({ message: "Что то пошло не так =(" });
+    console.error(err);
+    next(err);
   }
 };
 
 export const getUserById: RequestHandler<
   { id?: string },
   IGetUserByIdResponse | { message: string }
-> = async (req, res) => {
+> = async (req, res, next) => {
   const { id: IdInParam } = req.params;
   try {
-    if (!IdInParam) throw new Error("Нет ID");
+    if (!IdInParam) throw new BadRequestError("Нет ID");
     const user = await userModel.findById(IdInParam);
-    if (!user) throw new Error("Нет такого пользователя");
+    if (!user) throw new NotFoundError("Нет такого пользователя");
     const { about, avatar, name, id } = user;
     res.status(200).send({ about, avatar, name, id });
   } catch (err) {
-    res.status(500).send({
-      message: "Что то пошло не так =(",
-    });
+    console.error(err);
+    next(err);
   }
 };
 
@@ -50,7 +51,7 @@ export const createUser: RequestHandler<
   unknown,
   ICreateuserResponse | { message: string },
   ICreateuserRequest
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { id, about, avatar, name } = await userModel.create({
       ...req.body,
@@ -63,8 +64,8 @@ export const createUser: RequestHandler<
       id,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).send({ message: "Что то пошло не так =(" });
+    console.error(err);
+    next(err);
   }
 };
 
@@ -74,10 +75,11 @@ export const updateUser: RequestHandler<
   IUpdateUserRequest,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { name, about } = req.body;
-    if (!(about && name)) throw new Error("Не все параметры переданы");
+    if (!(about && name))
+      throw new BadRequestError("Не все параметры переданы");
 
     const { _id } = res.locals.user;
     const updatedUser = await userModel.findByIdAndUpdate(
@@ -90,7 +92,7 @@ export const updateUser: RequestHandler<
       },
       { new: true }
     );
-    if (!updatedUser) throw new Error("Нет такого челоека");
+    if (!updatedUser) throw new NotFoundError("Нет такого челоека");
     res.status(200).send({
       about: updatedUser.about,
       avatar: updatedUser.avatar,
@@ -98,10 +100,8 @@ export const updateUser: RequestHandler<
       name: updatedUser.name,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).send({
-      message: "Что-то пошло не так =(",
-    });
+    console.error(err);
+    next(err);
   }
 };
 
@@ -111,11 +111,11 @@ export const updateAvatar: RequestHandler<
   IUpdateAvatarRequest,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { avatar } = req.body;
 
-    if (!avatar) throw new Error("Не переданы все параметры");
+    if (!avatar) throw new BadRequestError("Не переданы все параметры");
 
     const { _id } = res.locals.user;
     const userWithUpdateddAvatar = await userModel.findByIdAndUpdate(
@@ -124,7 +124,8 @@ export const updateAvatar: RequestHandler<
       { new: true }
     );
 
-    if (!userWithUpdateddAvatar) throw new Error("Нет такого пользователя");
+    if (!userWithUpdateddAvatar)
+      throw new NotFoundError("Нет такого пользователя");
 
     res.status(200).send({
       about: userWithUpdateddAvatar.about,
@@ -133,9 +134,7 @@ export const updateAvatar: RequestHandler<
       name: userWithUpdateddAvatar.name,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).send({
-      message: "Что-то пошло не так =(",
-    });
+    console.error(err);
+    next(err);
   }
 };
