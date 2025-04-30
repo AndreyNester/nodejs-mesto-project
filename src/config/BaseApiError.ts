@@ -1,4 +1,4 @@
-export abstract class BaseApiError extends Error {
+export default abstract class BaseApiError extends Error {
   public statusCode: number = 500;
 
   constructor(message: string) {

@@ -1,7 +1,8 @@
-import { RequestHandler } from "express";
-import cardModel from "../model/card";
-import userModel from "../model/user";
-import { IAuthContext } from "app";
+import { RequestHandler } from 'express';
+import mongoose from 'mongoose';
+import IAuthContext from '../types';
+import cardModel from '../model/card';
+import userModel from '../model/user';
 import {
   ICreateCardRequest,
   ICreateCardResponse,
@@ -9,9 +10,8 @@ import {
   IGetCard,
   ILikeCardResponse,
   IUnlikeCardResponse,
-} from "./cards.interface";
-import mongoose from "mongoose";
-import { AuthError, BadRequestError, NotFoundError } from "../config";
+} from './cards.interface';
+import { AuthError, BadRequestError, NotFoundError } from '../config';
 
 export const getCards: RequestHandler<
   unknown,
@@ -20,14 +20,16 @@ export const getCards: RequestHandler<
   try {
     const cards = await cardModel.find({});
     const preparedResult = cards.map<IGetCard>(
-      ({ link, name, id, createdAt, likes, owner }) => ({
+      ({
+        link, name, id, createdAt, likes, owner,
+      }) => ({
         link,
         name,
         id,
         createdAt,
         likes,
         owner,
-      })
+      }),
     );
     res.status(200).send(preparedResult);
   } catch (err) {
@@ -44,14 +46,16 @@ export const createCard: RequestHandler<
   try {
     const { link, name } = req.body;
     if (!(link && name)) {
-      throw new BadRequestError("Не все параметры переданы");
+      throw new BadRequestError('Не все параметры переданы');
     }
 
     const { _id } = res.locals.user;
     const authUser = await userModel.findById(_id);
-    if (!authUser?._id) throw new Error("Нет такого пользователя");
+    if (!authUser?._id) throw new Error('Нет такого пользователя');
 
-    const { createdAt, likes, id, owner } = await cardModel.create({
+    const {
+      createdAt, likes, id, owner,
+    } = await cardModel.create({
       name,
       owner: authUser._id,
       link,
@@ -79,16 +83,16 @@ export const deleteCard: RequestHandler<
 > = async (req, res, next) => {
   try {
     const { id } = req.params;
-    if (!id) throw new Error("Не передан ID");
+    if (!id) throw new Error('Не передан ID');
     if (!mongoose.isValidObjectId(id)) {
-      throw new NotFoundError("Карточки с таким id не существует");
+      throw new NotFoundError('Карточки с таким id не существует');
     }
     const deletedCard = await cardModel.findByIdAndDelete(id);
     if (!deletedCard) {
-      throw new NotFoundError("Карточки с таким id не существует");
+      throw new NotFoundError('Карточки с таким id не существует');
     }
     res.status(200).send({
-      message: "Карточка успешно удалена",
+      message: 'Карточка успешно удалена',
     });
   } catch (err) {
     console.error(err);
@@ -105,22 +109,22 @@ export const likeCard: RequestHandler<
   try {
     const { cardId } = req.params;
 
-    if (!cardId) throw new Error("Не переда ID карточки");
+    if (!cardId) throw new Error('Не переда ID карточки');
     if (!mongoose.isValidObjectId(cardId)) {
-      throw new NotFoundError("Карточки с таким ID не существует");
+      throw new NotFoundError('Карточки с таким ID не существует');
     }
 
     const { _id } = res.locals.user;
     if (!mongoose.isValidObjectId(_id)) {
-      throw new AuthError("Нет вторизации");
+      throw new AuthError('Нет вторизации');
     }
     const likedCard = await cardModel.findByIdAndUpdate(
       cardId,
       { $addToSet: { likes: _id } },
-      { new: true }
+      { new: true },
     );
     if (!likedCard) {
-      throw new NotFoundError("Карточки с таким ID не существует");
+      throw new NotFoundError('Карточки с таким ID не существует');
     }
 
     res.status(200).send({
@@ -147,14 +151,14 @@ export const unlikeCard: RequestHandler<
   try {
     const { cardId } = req.params;
 
-    if (!cardId) throw new Error("Не переда ID карточки");
+    if (!cardId) throw new Error('Не переда ID карточки');
     if (!mongoose.isValidObjectId(cardId)) {
-      throw new NotFoundError("Карточки с таким ID не существует");
+      throw new NotFoundError('Карточки с таким ID не существует');
     }
 
     const { _id } = res.locals.user;
     if (!mongoose.isValidObjectId(_id)) {
-      throw new AuthError("Нет вторизации");
+      throw new AuthError('Нет вторизации');
     }
     const unlikedCard = await cardModel.findByIdAndUpdate(
       cardId,
@@ -163,11 +167,11 @@ export const unlikeCard: RequestHandler<
           likes: _id,
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!unlikedCard) {
-      throw new NotFoundError("Карточки с таким ID не существует");
+      throw new NotFoundError('Карточки с таким ID не существует');
     }
 
     res.status(200).send({

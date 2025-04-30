@@ -1,4 +1,8 @@
-export * from "./AuthError";
-export * from "./BadRequestError";
-export * from "./BaseApiError";
-export * from "./NotFoundError";
+import AuthError from './AuthError';
+import BadRequestError from './BadRequestError';
+import BaseApiError from './BaseApiError';
+import NotFoundError from './NotFoundError';
+
+export {
+  AuthError, BadRequestError, BaseApiError, NotFoundError,
+};

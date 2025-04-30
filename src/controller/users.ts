@@ -1,5 +1,7 @@
-import { RequestHandler } from "express";
-import userModel, { IUser } from "../model/user";
+import { RequestHandler } from 'express';
+import mongoose from 'mongoose';
+import IAuthContext from '../types';
+import userModel from '../model/user';
 import {
   ICreateuserRequest,
   ICreateuserResponse,
@@ -10,10 +12,8 @@ import {
   IUpdateUserResponse,
   IUpdateAvatarRequest,
   IUpdateAvatarResponse,
-} from "./users.interface";
-import { IAuthContext } from "app";
-import { NotFoundError, BadRequestError, AuthError } from "../config";
-import mongoose from "mongoose";
+} from './users.interface';
+import { NotFoundError, BadRequestError, AuthError } from '../config';
 
 export const getUsers: RequestHandler<
   unknown,
@@ -22,12 +22,14 @@ export const getUsers: RequestHandler<
   try {
     const users = await userModel.find({});
     const preparedResponse: TGetUsersResponse = users.map<IGetUsersResItem>(
-      ({ about, avatar, _id, name }) => ({
+      ({
+        about, avatar, _id, name,
+      }) => ({
         about,
         avatar,
         _id: _id.toString(),
         name,
-      })
+      }),
     );
     res.status(200).send(preparedResponse);
   } catch (err) {
@@ -42,13 +44,21 @@ export const getUserById: RequestHandler<
 > = async (req, res, next) => {
   const { id: IdInParam } = req.params;
   try {
-    if (!IdInParam) throw new BadRequestError("Нет ID");
-    if (!mongoose.isObjectIdOrHexString(IdInParam))
-      throw new NotFoundError("Нет такого пользователя");
+    if (!IdInParam) throw new BadRequestError('Нет ID');
+    if (!mongoose.isObjectIdOrHexString(IdInParam)) {
+      throw new NotFoundError('Нет такого пользователя');
+    }
     const user = await userModel.findById(IdInParam);
-    if (!user) throw new NotFoundError("Нет такого пользователя");
-    const { about, avatar, name, _id } = user;
-    res.status(200).send({ about, avatar, name, _id: _id.toString() });
+    if (!user) throw new NotFoundError('Нет такого пользователя');
+    const {
+      about, avatar, name, _id,
+    } = user;
+    res.status(200).send({
+      about,
+      avatar,
+      name,
+      _id: _id.toString(),
+    });
   } catch (err) {
     console.error(err);
     next(err);
@@ -61,9 +71,12 @@ export const createUser: RequestHandler<
   ICreateuserRequest
 > = async (req, res, next) => {
   try {
-    if (!(req.body.about && req.body.avatar && req.body.name))
-      throw new BadRequestError("Не все параметры переданы");
-    const { _id, about, avatar, name } = await userModel.create({
+    if (!(req.body.about && req.body.avatar && req.body.name)) {
+      throw new BadRequestError('Не все параметры переданы');
+    }
+    const {
+      _id, about, avatar, name,
+    } = await userModel.create({
       ...req.body,
     });
 
@@ -89,12 +102,12 @@ export const updateUser: RequestHandler<
   try {
     const { name, about } = req.body;
     if (!(about && name)) {
-      throw new BadRequestError("Не все параметры переданы");
+      throw new BadRequestError('Не все параметры переданы');
     }
 
     const { _id } = res.locals.user;
     if (!(_id && mongoose.isValidObjectId(_id))) {
-      throw new AuthError("Нет авторизации");
+      throw new AuthError('Нет авторизации');
     }
     const updatedUser = await userModel.findByIdAndUpdate(
       _id,
@@ -104,9 +117,9 @@ export const updateUser: RequestHandler<
           name,
         },
       },
-      { new: true }
+      { new: true },
     );
-    if (!updatedUser) throw new NotFoundError("Нет такого челоека");
+    if (!updatedUser) throw new NotFoundError('Нет такого челоека');
     res.status(200).send({
       about: updatedUser.about,
       avatar: updatedUser.avatar,
@@ -129,20 +142,21 @@ export const updateAvatar: RequestHandler<
   try {
     const { avatar } = req.body;
 
-    if (!avatar) throw new BadRequestError("Не переданы все параметры");
+    if (!avatar) throw new BadRequestError('Не переданы все параметры');
 
     const { _id } = res.locals.user;
     if (!(_id && mongoose.isValidObjectId(_id))) {
-      throw new AuthError("нет авторизации");
+      throw new AuthError('нет авторизации');
     }
     const userWithUpdateddAvatar = await userModel.findByIdAndUpdate(
       _id,
       { $set: { avatar } },
-      { new: true }
+      { new: true },
     );
 
-    if (!userWithUpdateddAvatar)
-      throw new NotFoundError("Нет такого пользователя");
+    if (!userWithUpdateddAvatar) {
+      throw new NotFoundError('Нет такого пользователя');
+    }
 
     res.status(200).send({
       about: userWithUpdateddAvatar.about,

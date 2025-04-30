@@ -1,25 +1,18 @@
-import { ICard } from "model/card.interface";
+import ICard from '../model/card.interface';
 
-interface IGetCard extends ICard {
+export interface IGetCard extends ICard {
   id: string;
 }
-type TGetCardResponse = IGetCard[];
+export type TGetCardResponse = IGetCard[];
 
-interface ICreateCardRequest extends Partial<Pick<ICard, "name" | "link">> {}
-interface ICreateCardResponse extends ICard {
-  id: string;
-}
-
-interface ILikeCardResponse extends ICard {
+export interface ICreateCardRequest
+  extends Partial<Pick<ICard, 'name' | 'link'>> {}
+export interface ICreateCardResponse extends ICard {
   id: string;
 }
 
-interface IUnlikeCardResponse extends ICard {}
-export type {
-  IGetCard,
-  TGetCardResponse,
-  ICreateCardRequest,
-  ICreateCardResponse,
-  ILikeCardResponse,
-  IUnlikeCardResponse,
-};
+export interface ILikeCardResponse extends ICard {
+  id: string;
+}
+
+export interface IUnlikeCardResponse extends ICard {}
