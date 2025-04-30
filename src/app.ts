@@ -28,8 +28,13 @@ app.use("/", userRoutes);
 app.use("/", cardRoutes);
 
 app.use(
-  (err: BaseApiError, req: Request, res: Response, next: NextFunction) => {
-    res.status(err.statusCode).send({ message: err.message });
+  (
+    { statusCode = 500, message }: BaseApiError,
+    _req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    res.status(statusCode).send({ message: message });
   }
 );
 app.listen(PORT, () => {
