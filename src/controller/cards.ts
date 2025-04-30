@@ -66,7 +66,7 @@ export const createCard: RequestHandler<
       owner,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     next(err);
   }
 };
@@ -91,7 +91,7 @@ export const deleteCard: RequestHandler<
       message: "Карточка успешно удалена",
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     next(err);
   }
 };
@@ -132,7 +132,7 @@ export const likeCard: RequestHandler<
       owner: likedCard.owner,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     next(err);
   }
 };
@@ -178,7 +178,7 @@ export const unlikeCard: RequestHandler<
       owner: unlikedCard.owner,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     next(err);
   }
 };

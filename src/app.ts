@@ -31,8 +31,7 @@ app.use(
   (
     { statusCode = 500, message }: BaseApiError,
     _req: Request,
-    res: Response,
-    next: NextFunction
+    res: Response
   ) => {
     res.status(statusCode).send({ message: message });
   }
@@ -42,6 +41,6 @@ app.listen(PORT, () => {
 });
 
 // подключаемся к серверу MongoDB
-mongoose.connect("mongodb://localhost:27017/mydb").then(() => {
+mongoose.connect("mongodb://localhost:27017/mestodb").then(() => {
   console.log("db cconnected");
 });
