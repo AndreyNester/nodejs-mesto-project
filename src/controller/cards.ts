@@ -11,11 +11,12 @@ import {
   IUnlikeCardResponse,
 } from "./cards.interface";
 import mongoose from "mongoose";
+import { AuthError, BadRequestError, NotFoundError } from "../config";
 
 export const getCards: RequestHandler<
   unknown,
   TGetCardResponse | { message: string }
-> = async (_req, res) => {
+> = async (_req, res, next) => {
   try {
     const cards = await cardModel.find({});
     const preparedResult = cards.map<IGetCard>(
@@ -30,7 +31,7 @@ export const getCards: RequestHandler<
     );
     res.status(200).send(preparedResult);
   } catch (err) {
-    res.status(500).send({ message: "Что-то пошло не так =(" });
+    next(err);
   }
 };
 export const createCard: RequestHandler<
@@ -39,10 +40,12 @@ export const createCard: RequestHandler<
   ICreateCardRequest,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { link, name } = req.body;
-    if (!(link && name)) throw new Error("Не все параметры переданы");
+    if (!(link && name)) {
+      throw new BadRequestError("Не все параметры переданы");
+    }
 
     const { _id } = res.locals.user;
     const authUser = await userModel.findById(_id);
@@ -64,9 +67,7 @@ export const createCard: RequestHandler<
     });
   } catch (err) {
     console.log(err);
-    res.status(500).send({
-      message: "Что-то пошло не так =(",
-    });
+    next(err);
   }
 };
 
@@ -75,20 +76,23 @@ export const deleteCard: RequestHandler<
   {
     message: string;
   }
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id) throw new Error("Не передан ID");
+    if (!mongoose.isValidObjectId(id)) {
+      throw new NotFoundError("Карточки с таким id не существует");
+    }
     const deletedCard = await cardModel.findByIdAndDelete(id);
-    if (!deletedCard) throw new Error("Такого человека не существует");
+    if (!deletedCard) {
+      throw new NotFoundError("Карточки с таким id не существует");
+    }
     res.status(200).send({
       message: "Карточка успешно удалена",
     });
   } catch (err) {
     console.log(err);
-    res.status(500).send({
-      message: "Что-то пошло не так",
-    });
+    next(err);
   }
 };
 export const likeCard: RequestHandler<
@@ -97,19 +101,27 @@ export const likeCard: RequestHandler<
   unknown,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { cardId } = req.params;
 
     if (!cardId) throw new Error("Не переда ID карточки");
+    if (!mongoose.isValidObjectId(cardId)) {
+      throw new NotFoundError("Карточки с таким ID не существует");
+    }
 
     const { _id } = res.locals.user;
+    if (!mongoose.isValidObjectId(_id)) {
+      throw new AuthError("Нет вторизации");
+    }
     const likedCard = await cardModel.findByIdAndUpdate(
       cardId,
       { $addToSet: { likes: _id } },
       { new: true }
     );
-    if (!likedCard) throw new Error("Нет такой карточки");
+    if (!likedCard) {
+      throw new NotFoundError("Карточки с таким ID не существует");
+    }
 
     res.status(200).send({
       createdAt: likedCard.createdAt,
@@ -121,7 +133,7 @@ export const likeCard: RequestHandler<
     });
   } catch (err) {
     console.log(err);
-    res.status(500).send({ message: "Что-то пошло не так =(" });
+    next(err);
   }
 };
 
@@ -131,14 +143,19 @@ export const unlikeCard: RequestHandler<
   unknown,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { cardId } = req.params;
 
-    if (!cardId) throw new Error("Не передан ID карточки");
+    if (!cardId) throw new Error("Не переда ID карточки");
+    if (!mongoose.isValidObjectId(cardId)) {
+      throw new NotFoundError("Карточки с таким ID не существует");
+    }
 
     const { _id } = res.locals.user;
-
+    if (!mongoose.isValidObjectId(_id)) {
+      throw new AuthError("Нет вторизации");
+    }
     const unlikedCard = await cardModel.findByIdAndUpdate(
       cardId,
       {
@@ -148,7 +165,10 @@ export const unlikeCard: RequestHandler<
       },
       { new: true }
     );
-    if (!unlikedCard) throw new Error("нет такой карточки");
+
+    if (!unlikedCard) {
+      throw new NotFoundError("Карточки с таким ID не существует");
+    }
 
     res.status(200).send({
       createdAt: unlikedCard.createdAt,
@@ -159,6 +179,6 @@ export const unlikeCard: RequestHandler<
     });
   } catch (err) {
     console.log(err);
-    res.status(500).send({ message: "Что-то пошло не так =(" });
+    next(err);
   }
 };

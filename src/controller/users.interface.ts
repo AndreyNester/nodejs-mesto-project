@@ -1,27 +1,27 @@
 import { IUser } from "../model/user";
 
 interface ICreateuserResponse extends IUser {
-  id: string;
+  _id: string;
 }
 interface ICreateuserRequest extends IUser {}
 
 interface IGetUserByIdResponse extends IUser {
-  id: string;
+  _id: string;
 }
 
 interface IGetUsersResItem extends IUser {
-  id: string;
+  _id: string;
 }
 type TGetUsersResponse = IGetUsersResItem[];
 
 interface IUpdateUserRequest extends Partial<Pick<IUser, "name" | "about">> {}
 interface IUpdateUserResponse extends IUser {
-  id: string;
+  _id: string;
 }
 
 interface IUpdateAvatarRequest extends Partial<Pick<IUser, "avatar">> {}
 interface IUpdateAvatarResponse extends IUser {
-  id: string;
+  _id: string;
 }
 
 export type {

@@ -12,7 +12,8 @@ import {
   IUpdateAvatarResponse,
 } from "./users.interface";
 import { IAuthContext } from "app";
-import { NotFoundError, BadRequestError } from "../config";
+import { NotFoundError, BadRequestError, AuthError } from "../config";
+import mongoose from "mongoose";
 
 export const getUsers: RequestHandler<
   unknown,
@@ -21,7 +22,12 @@ export const getUsers: RequestHandler<
   try {
     const users = await userModel.find({});
     const preparedResponse: TGetUsersResponse = users.map<IGetUsersResItem>(
-      ({ about, avatar, id, name }) => ({ about, avatar, id, name })
+      ({ about, avatar, _id, name }) => ({
+        about,
+        avatar,
+        _id: _id.toString(),
+        name,
+      })
     );
     res.status(200).send(preparedResponse);
   } catch (err) {
@@ -37,10 +43,12 @@ export const getUserById: RequestHandler<
   const { id: IdInParam } = req.params;
   try {
     if (!IdInParam) throw new BadRequestError("Нет ID");
+    if (!mongoose.isObjectIdOrHexString(IdInParam))
+      throw new NotFoundError("Нет такого пользователя");
     const user = await userModel.findById(IdInParam);
     if (!user) throw new NotFoundError("Нет такого пользователя");
-    const { about, avatar, name, id } = user;
-    res.status(200).send({ about, avatar, name, id });
+    const { about, avatar, name, _id } = user;
+    res.status(200).send({ about, avatar, name, _id: _id.toString() });
   } catch (err) {
     console.error(err);
     next(err);
@@ -53,7 +61,9 @@ export const createUser: RequestHandler<
   ICreateuserRequest
 > = async (req, res, next) => {
   try {
-    const { id, about, avatar, name } = await userModel.create({
+    if (!(req.body.about && req.body.avatar && req.body.name))
+      throw new BadRequestError("Не все параметры переданы");
+    const { _id, about, avatar, name } = await userModel.create({
       ...req.body,
     });
 
@@ -61,7 +71,7 @@ export const createUser: RequestHandler<
       about,
       avatar,
       name,
-      id,
+      _id: _id.toString(),
     });
   } catch (err) {
     console.error(err);
@@ -78,10 +88,14 @@ export const updateUser: RequestHandler<
 > = async (req, res, next) => {
   try {
     const { name, about } = req.body;
-    if (!(about && name))
+    if (!(about && name)) {
       throw new BadRequestError("Не все параметры переданы");
+    }
 
     const { _id } = res.locals.user;
+    if (!(_id && mongoose.isValidObjectId(_id))) {
+      throw new AuthError("Нет авторизации");
+    }
     const updatedUser = await userModel.findByIdAndUpdate(
       _id,
       {
@@ -96,7 +110,7 @@ export const updateUser: RequestHandler<
     res.status(200).send({
       about: updatedUser.about,
       avatar: updatedUser.avatar,
-      id: updatedUser.id,
+      _id: updatedUser._id.toString(),
       name: updatedUser.name,
     });
   } catch (err) {
@@ -118,6 +132,9 @@ export const updateAvatar: RequestHandler<
     if (!avatar) throw new BadRequestError("Не переданы все параметры");
 
     const { _id } = res.locals.user;
+    if (!(_id && mongoose.isValidObjectId(_id))) {
+      throw new AuthError("нет авторизации");
+    }
     const userWithUpdateddAvatar = await userModel.findByIdAndUpdate(
       _id,
       { $set: { avatar } },
@@ -130,7 +147,7 @@ export const updateAvatar: RequestHandler<
     res.status(200).send({
       about: userWithUpdateddAvatar.about,
       avatar: userWithUpdateddAvatar.avatar,
-      id: userWithUpdateddAvatar.id,
+      _id: userWithUpdateddAvatar._id.toString(),
       name: userWithUpdateddAvatar.name,
     });
   } catch (err) {
