@@ -19,6 +19,9 @@
     "import/extensions": [".js", ".ts"]
   },
   "rules": {
+    "linebreak-style": "off",
+    "comma-dangle": "off",
+    "object-curly-newline": "off",
     "quotes": "off",
     "semi": "off",
     "no-underscore-dangle": "off",
