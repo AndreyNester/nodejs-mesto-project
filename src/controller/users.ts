@@ -1,3 +1,5 @@
+import validator from "validator";
+import bcrypt from "bcrypt";
 import { RequestHandler } from "express";
 import mongoose from "mongoose";
 import IAuthContext from "../types";
@@ -21,11 +23,12 @@ export const getUsers: RequestHandler<
   try {
     const users = await userModel.find({});
     const preparedResponse: TGetUsersResponse = users.map<IGetUsersResItem>(
-      ({ about, avatar, _id, name }) => ({
+      ({ about, avatar, _id, name, email }) => ({
         about,
         avatar,
         _id: _id.toString(),
         name,
+        email,
       })
     );
     res.status(200).send(preparedResponse);
@@ -49,12 +52,13 @@ export const getUserById: RequestHandler<
       res.status(404).send({ message: "Человека с таким ID не существует" });
       return;
     }
-    const { about, avatar, name, _id } = user;
+    const { about, avatar, name, _id, email } = user;
     res.status(200).send({
       about,
       avatar,
       name,
       _id: _id.toString(),
+      email,
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
@@ -71,11 +75,22 @@ export const createUser: RequestHandler<
   ICreateuserRequest
 > = async (req, res) => {
   try {
-    const { about, avatar, name } = req.body;
+    const { about, avatar, name, email, password } = req.body;
+
+    // Валдируем email здесь чтобы лишний раз не хешировать пароль
+    if (!validator.isEmail(email)) {
+      res.status(400).send({ message: "Не корректно переданы данные" });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const createdUser = await userModel.create({
       about,
       avatar,
       name,
+      email,
+      password: hashedPassword,
     });
 
     res.status(201).send({
@@ -83,6 +98,7 @@ export const createUser: RequestHandler<
       avatar: createdUser.avatar,
       name: createdUser.name,
       _id: createdUser.id,
+      email: createdUser.email,
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
@@ -122,6 +138,7 @@ export const updateUser: RequestHandler<
       avatar: updatedUser.avatar,
       _id: updatedUser._id.toString(),
       name: updatedUser.name,
+      email: updatedUser.email,
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
@@ -156,6 +173,7 @@ export const updateAvatar: RequestHandler<
       avatar: userWithUpdateddAvatar.avatar,
       _id: userWithUpdateddAvatar._id.toString(),
       name: userWithUpdateddAvatar.name,
+      email: userWithUpdateddAvatar.email,
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
