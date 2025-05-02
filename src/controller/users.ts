@@ -13,7 +13,6 @@ import {
   IUpdateAvatarRequest,
   IUpdateAvatarResponse,
 } from "./users.interface";
-import AppError from "../config/AppError";
 
 export const getUsers: RequestHandler<
   unknown,
@@ -31,28 +30,25 @@ export const getUsers: RequestHandler<
     );
     res.status(200).send(preparedResponse);
   } catch (err) {
-    if (err instanceof AppError) {
-      switch (err.name) {
-        default:
-          res.status(500).send({ message: "Ошибка на сервере" });
-      }
-    } else {
-      res.status(500).send({ message: "Ошибка на сервере" });
-    }
+    res.status(500).send({ message: "Ошибка на сервере" });
   }
 };
 
 export const getUserById: RequestHandler<
-  { id?: string },
+  { id: string },
   IGetUserByIdResponse | { message: string }
 > = async (req, res) => {
   const { id: IdInParam } = req.params;
   try {
-    if (!(IdInParam && mongoose.isValidObjectId(IdInParam))) {
-      throw new AppError("Bad Request Error");
+    if (!mongoose.isValidObjectId(IdInParam)) {
+      res.status(400).send({ message: "Не корректно переданы данные" });
+      return;
     }
     const user = await userModel.findById(IdInParam);
-    if (!user) throw new AppError("Not Found Error");
+    if (!user) {
+      res.status(404).send({ message: "Человека с таким ID не существует" });
+      return;
+    }
     const { about, avatar, name, _id } = user;
     res.status(200).send({
       about,
@@ -61,20 +57,7 @@ export const getUserById: RequestHandler<
       _id: _id.toString(),
     });
   } catch (err) {
-    if (err instanceof AppError) {
-      switch (err.name) {
-        case "Bad Request Error":
-          res.status(400).send({ message: "Не корректно переданы данные" });
-          break;
-        case "Not Found Error":
-          res
-            .status(404)
-            .send({ message: "Человека с таким ID не существует" });
-          break;
-        default:
-          res.status(500).send({ message: "Ошибка на сервере" });
-      }
-    } else if (err instanceof mongoose.Error.ValidationError) {
+    if (err instanceof mongoose.Error.ValidationError) {
       res.status(400).send({ message: "Не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "Ошибка на сервере" });
@@ -102,12 +85,7 @@ export const createUser: RequestHandler<
       _id: createdUser.id,
     });
   } catch (err) {
-    if (err instanceof AppError) {
-      switch (err.name) {
-        default:
-          res.status(500).send({ message: "Ошибка на сервере" });
-      }
-    } else if (err instanceof mongoose.Error.ValidationError) {
+    if (err instanceof mongoose.Error.ValidationError) {
       res.status(400).send({ message: "Не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "Ошибка на сервере" });
@@ -124,9 +102,7 @@ export const updateUser: RequestHandler<
 > = async (req, res) => {
   try {
     const { name, about } = req.body;
-
     const { _id } = res.locals.user;
-
     const updatedUser = await userModel.findByIdAndUpdate(
       _id,
       {
@@ -137,7 +113,10 @@ export const updateUser: RequestHandler<
       },
       { new: true, runValidators: true }
     );
-    if (!updatedUser) throw new AppError("Not Found Error");
+    if (!updatedUser) {
+      res.status(404).send({ message: "Человека с таким ID не существует" });
+      return;
+    }
     res.status(200).send({
       about: updatedUser.about,
       avatar: updatedUser.avatar,
@@ -145,17 +124,7 @@ export const updateUser: RequestHandler<
       name: updatedUser.name,
     });
   } catch (err) {
-    if (err instanceof AppError) {
-      switch (err.name) {
-        case "Not Found Error":
-          res
-            .status(404)
-            .send({ message: "Человека с таким ID не существует" });
-          break;
-        default:
-          res.status(500).send({ message: "Ошибка на сервере" });
-      }
-    } else if (err instanceof mongoose.Error.ValidationError) {
+    if (err instanceof mongoose.Error.ValidationError) {
       res.status(400).send({ message: "не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "Ошибка на сервере" });
@@ -172,19 +141,16 @@ export const updateAvatar: RequestHandler<
 > = async (req, res) => {
   try {
     const { avatar } = req.body;
-
     const { _id } = res.locals.user;
-
     const userWithUpdateddAvatar = await userModel.findByIdAndUpdate(
       _id,
       { $set: { avatar } },
       { new: true, runValidators: true }
     );
-
     if (!userWithUpdateddAvatar) {
-      throw new AppError("Not Found Error");
+      res.status(404).send({ message: "Пользователь с таким ID не найден" });
+      return;
     }
-
     res.status(200).send({
       about: userWithUpdateddAvatar.about,
       avatar: userWithUpdateddAvatar.avatar,
@@ -192,17 +158,7 @@ export const updateAvatar: RequestHandler<
       name: userWithUpdateddAvatar.name,
     });
   } catch (err) {
-    if (err instanceof AppError) {
-      switch (err.name) {
-        case "Not Found Error":
-          res
-            .status(404)
-            .send({ message: "Пользователь с таким ID не найден" });
-          break;
-        default:
-          res.status(500).send({ message: "Ошибка на сервере" });
-      }
-    } else if (err instanceof mongoose.Error.ValidationError) {
+    if (err instanceof mongoose.Error.ValidationError) {
       res.status(400).send({ message: "не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "Ошибка на сервере" });

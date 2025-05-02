@@ -7,8 +7,8 @@ import cardRoutes from "./routes/cards";
 const { PORT = 3000 } = process.env;
 
 const app = express();
-app.use(express.json());
 
+app.use(express.json());
 app.use(
   (_req: Request, res: Response<unknown, IAuthContext>, next: NextFunction) => {
     res.locals.user = {
@@ -17,17 +17,16 @@ app.use(
     next();
   }
 );
-
 app.use("/", userRoutes);
 app.use("/", cardRoutes);
-app.listen(PORT, () => {
-  console.log("Started server");
-});
-
 app.use((req: Request, res: Response) => {
   res.status(404).send({
     message: "Такого ресурса не существует",
   });
+});
+
+app.listen(PORT, () => {
+  console.log("Started server");
 });
 
 // подключаемся к серверу MongoDB

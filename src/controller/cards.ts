@@ -10,7 +10,6 @@ import {
   ILikeCardResponse,
   IUnlikeCardResponse,
 } from "./cards.interface";
-import AppError from "../config/AppError";
 
 export const getCards: RequestHandler<
   unknown,
@@ -29,15 +28,8 @@ export const getCards: RequestHandler<
       })
     );
     res.status(200).send(preparedResult);
-  } catch (err) {
-    if (err instanceof AppError) {
-      switch (err.name) {
-        default:
-          res.status(500).send({ message: "Ошибка на сервере" });
-      }
-    } else {
-      res.status(500).send({ message: "ошибка на сервере" });
-    }
+  } catch (_err) {
+    res.status(500).send({ message: "ошибка на сервере" });
   }
 };
 export const createCard: RequestHandler<
@@ -66,12 +58,7 @@ export const createCard: RequestHandler<
       owner: createdCard.owner,
     });
   } catch (err) {
-    if (err instanceof AppError) {
-      switch (err.name) {
-        default:
-          res.status(500).send({ message: "Ошибка на сервере" });
-      }
-    } else if (err instanceof mongoose.Error.ValidationError) {
+    if (err instanceof mongoose.Error.ValidationError) {
       res.status(400).send({ message: "Не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "ошибка на сервере" });
@@ -89,28 +76,19 @@ export const deleteCard: RequestHandler<
     const { id } = req.params;
 
     if (!(id && mongoose.isValidObjectId(id))) {
-      throw new AppError("Bad Request Error");
+      res.status(400).send({ message: "Не корректно переданы данные" });
+      return;
     }
     const deletedCard = await cardModel.findByIdAndDelete(id);
     if (!deletedCard) {
-      throw new AppError("Not Found Error");
+      res.status(404).send({ message: "Карточка с таким ID не найдена" });
+      return;
     }
     res.status(200).send({
       message: "Карточка успешно удалена",
     });
   } catch (err) {
-    if (err instanceof AppError) {
-      switch (err.name) {
-        case "Bad Request Error":
-          res.status(400).send({ message: "Не корректно переданы данные" });
-          break;
-        case "Not Found Error":
-          res.status(404).send({ message: "Карточка с таким ID не найдена" });
-          break;
-        default:
-          res.status(500).send({ message: "Ошибка на сервере" });
-      }
-    } else if (err instanceof mongoose.Error.ValidationError) {
+    if (err instanceof mongoose.Error.ValidationError) {
       res.status(400).send({ message: "Не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "ошибка на сервере" });
@@ -118,7 +96,7 @@ export const deleteCard: RequestHandler<
   }
 };
 export const likeCard: RequestHandler<
-  { cardId?: string },
+  { cardId: string },
   ILikeCardResponse | { message: string },
   unknown,
   unknown,
@@ -126,9 +104,9 @@ export const likeCard: RequestHandler<
 > = async (req, res) => {
   try {
     const { cardId } = req.params;
-
-    if (!(cardId && mongoose.isValidObjectId(cardId))) {
-      throw new AppError("Bad Request Error");
+    if (!mongoose.isValidObjectId(cardId)) {
+      res.status(400).send({ message: "не корректно переданы данные" });
+      return;
     }
 
     const { _id } = res.locals.user;
@@ -139,7 +117,8 @@ export const likeCard: RequestHandler<
       { new: true, runValidators: true }
     );
     if (!likedCard) {
-      throw new AppError("Not Found Error");
+      res.status(404).send({ message: "Карточка с таким ID не найдена" });
+      return;
     }
 
     res.status(200).send({
@@ -151,18 +130,7 @@ export const likeCard: RequestHandler<
       owner: likedCard.owner,
     });
   } catch (err) {
-    if (err instanceof AppError) {
-      switch (err.name) {
-        case "Bad Request Error":
-          res.status(400).send({ message: "не корректно переданы данные" });
-          break;
-        case "Not Found Error":
-          res.status(404).send({ message: "Карточка с таким ID не найдена" });
-          break;
-        default:
-          res.status(500).send({ message: "Ошибка на сервере" });
-      }
-    } else if (err instanceof mongoose.Error.ValidationError) {
+    if (err instanceof mongoose.Error.ValidationError) {
       res.status(400).send({ message: "Не корректно передаены данные" });
     } else {
       res.status(500).send({ message: "ошибка на сервере" });
@@ -179,11 +147,10 @@ export const unlikeCard: RequestHandler<
 > = async (req, res) => {
   try {
     const { cardId } = req.params;
-
     if (!(cardId && mongoose.isValidObjectId(cardId))) {
-      throw new AppError("Bad Request Error");
+      res.status(400).send({ message: "Не корректно переданы данные" });
+      return;
     }
-
     const { _id } = res.locals.user;
     const unlikedCard = await cardModel.findByIdAndUpdate(
       cardId,
@@ -196,7 +163,8 @@ export const unlikeCard: RequestHandler<
     );
 
     if (!unlikedCard) {
-      throw new AppError("Not Found Error");
+      res.status(404).send({ message: "Карточка с таким ID не найдена" });
+      return;
     }
 
     res.status(200).send({
@@ -207,18 +175,7 @@ export const unlikeCard: RequestHandler<
       owner: unlikedCard.owner,
     });
   } catch (err) {
-    if (err instanceof AppError) {
-      switch (err.name) {
-        case "Bad Request Error":
-          res.status(400).send({ message: "Не корректно переданы данные" });
-          break;
-        case "Not Found Error":
-          res.status(404).send({ message: "Карточка с таким ID не найдена" });
-          break;
-        default:
-          res.status(500).send({ message: "Ошибка на сервере" });
-      }
-    } else if (err instanceof mongoose.Error.ValidationError) {
+    if (err instanceof mongoose.Error.ValidationError) {
       res.status(400).send({ message: "Не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "ошибка на сервере" });
