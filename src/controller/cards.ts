@@ -88,11 +88,7 @@ export const deleteCard: RequestHandler<
       message: "Карточка успешно удалена",
     });
   } catch (err) {
-    if (err instanceof mongoose.Error.ValidationError) {
-      res.status(400).send({ message: "Не корректно переданы данные" });
-    } else {
-      res.status(500).send({ message: "ошибка на сервере" });
-    }
+    res.status(500).send({ message: "ошибка на сервере" });
   }
 };
 export const likeCard: RequestHandler<
