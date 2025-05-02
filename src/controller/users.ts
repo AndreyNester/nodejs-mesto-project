@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { RequestHandler } from "express";
 import mongoose from "mongoose";
 import IAuthContext from "../types";
@@ -32,7 +31,6 @@ export const getUsers: RequestHandler<
     );
     res.status(200).send(preparedResponse);
   } catch (err) {
-    console.error(err);
     if (err instanceof AppError) {
       switch (err.name) {
         default:
@@ -50,9 +48,8 @@ export const getUserById: RequestHandler<
 > = async (req, res) => {
   const { id: IdInParam } = req.params;
   try {
-    if (!IdInParam) throw new AppError("Bad Request Error");
-    if (!mongoose.isValidObjectId(IdInParam)) {
-      throw new AppError("Not Found Error");
+    if (!(IdInParam && mongoose.isValidObjectId(IdInParam))) {
+      throw new AppError("Bad Request Error");
     }
     const user = await userModel.findById(IdInParam);
     if (!user) throw new AppError("Not Found Error");
@@ -64,7 +61,6 @@ export const getUserById: RequestHandler<
       _id: _id.toString(),
     });
   } catch (err) {
-    console.error(err);
     if (err instanceof AppError) {
       switch (err.name) {
         case "Bad Request Error":
@@ -78,6 +74,8 @@ export const getUserById: RequestHandler<
         default:
           res.status(500).send({ message: "Ошибка на сервере" });
       }
+    } else if (err instanceof mongoose.Error.ValidationError) {
+      res.status(400).send({ message: "Не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "Ошибка на сервере" });
     }
@@ -90,21 +88,20 @@ export const createUser: RequestHandler<
   ICreateuserRequest
 > = async (req, res) => {
   try {
-    if (!(req.body.about && req.body.avatar && req.body.name)) {
-      throw new AppError("Bad Request Error");
-    }
-    const { _id, about, avatar, name } = await userModel.create({
-      ...req.body,
-    });
-
-    res.status(201).send({
+    const { about, avatar, name } = req.body;
+    const createdUser = await userModel.create({
       about,
       avatar,
       name,
-      _id: _id.toString(),
+    });
+
+    res.status(201).send({
+      about: createdUser.about,
+      avatar: createdUser.avatar,
+      name: createdUser.name,
+      _id: createdUser.id,
     });
   } catch (err) {
-    console.error(err);
     if (err instanceof AppError) {
       switch (err.name) {
         case "Bad Request Error":
@@ -113,6 +110,8 @@ export const createUser: RequestHandler<
         default:
           res.status(500).send({ message: "Ошибка на сервере" });
       }
+    } else if (err instanceof mongoose.Error.ValidationError) {
+      res.status(400).send({ message: "Не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "Ошибка на сервере" });
     }
@@ -128,14 +127,9 @@ export const updateUser: RequestHandler<
 > = async (req, res) => {
   try {
     const { name, about } = req.body;
-    if (!(about && name)) {
-      throw new AppError("Bad Request Error");
-    }
 
     const { _id } = res.locals.user;
-    if (!(_id && mongoose.isValidObjectId(_id))) {
-      throw new AppError("Auth Error");
-    }
+
     const updatedUser = await userModel.findByIdAndUpdate(
       _id,
       {
@@ -144,7 +138,7 @@ export const updateUser: RequestHandler<
           name,
         },
       },
-      { new: true }
+      { new: true, runValidators: true }
     );
     if (!updatedUser) throw new AppError("Not Found Error");
     res.status(200).send({
@@ -154,15 +148,8 @@ export const updateUser: RequestHandler<
       name: updatedUser.name,
     });
   } catch (err) {
-    console.error(err);
     if (err instanceof AppError) {
       switch (err.name) {
-        case "Auth Error":
-          res.status(401).send({ message: "Ошибка авторизации" });
-          break;
-        case "Bad Request Error":
-          res.status(400).send({ message: "Не корректно переданы данные" });
-          break;
         case "Not Found Error":
           res
             .status(404)
@@ -171,6 +158,8 @@ export const updateUser: RequestHandler<
         default:
           res.status(500).send({ message: "Ошибка на сервере" });
       }
+    } else if (err instanceof mongoose.Error.ValidationError) {
+      res.status(400).send({ message: "не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "Ошибка на сервере" });
     }
@@ -187,16 +176,12 @@ export const updateAvatar: RequestHandler<
   try {
     const { avatar } = req.body;
 
-    if (!avatar) throw new AppError("Bad Request Error");
-
     const { _id } = res.locals.user;
-    if (!(_id && mongoose.isValidObjectId(_id))) {
-      throw new AppError("Auth Error");
-    }
+
     const userWithUpdateddAvatar = await userModel.findByIdAndUpdate(
       _id,
       { $set: { avatar } },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!userWithUpdateddAvatar) {
@@ -210,21 +195,16 @@ export const updateAvatar: RequestHandler<
       name: userWithUpdateddAvatar.name,
     });
   } catch (err) {
-    console.error(err);
     if (err instanceof AppError) {
       switch (err.name) {
-        case "Auth Error":
-          res.status(401).send({ message: "Ошибка авторизации" });
-          break;
-        case "Bad Request Error":
-          res.status(400).send({ message: "Не корректно переданы данные" });
-          break;
         case "Not Found Error":
           res.status(404).send({ message: "Не корректно переданы данные" });
           break;
         default:
           res.status(500).send({ message: "Ошибка на сервере" });
       }
+    } else if (err instanceof mongoose.Error.ValidationError) {
+      res.status(400).send({ message: "не корректно переданы данные" });
     } else {
       res.status(500).send({ message: "Ошибка на сервере" });
     }

@@ -20,18 +20,14 @@ app.use(
 
 app.use("/", userRoutes);
 app.use("/", cardRoutes);
-
-// app.use(
-//   (
-//     { statusCode = 500, message }: BaseApiError,
-//     _req: Request,
-//     res: Response
-//   ) => {
-//     res.status(statusCode).send({ message });
-//   }
-// );
 app.listen(PORT, () => {
-  console.log("hella wodrl");
+  console.log("Started server");
+});
+
+app.use((req: Request, res: Response) => {
+  res.status(404).send({
+    message: "Такого ресурса не существует",
+  });
 });
 
 // подключаемся к серверу MongoDB
