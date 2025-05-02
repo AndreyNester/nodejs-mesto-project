@@ -1,5 +1,6 @@
 import validator from "validator";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { RequestHandler } from "express";
 import mongoose from "mongoose";
 import IAuthContext from "../types";
@@ -14,6 +15,8 @@ import {
   IUpdateUserResponse,
   IUpdateAvatarRequest,
   IUpdateAvatarResponse,
+  ILoginResponse,
+  ILoginRequest,
 } from "./users.interface";
 
 export const getUsers: RequestHandler<
@@ -181,5 +184,34 @@ export const updateAvatar: RequestHandler<
     } else {
       res.status(500).send({ message: "Ошибка на сервере" });
     }
+  }
+};
+
+export const login: RequestHandler<
+  unknown,
+  ILoginResponse | { message: string },
+  ILoginRequest
+> = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const targetUser = await userModel.findOne({ email });
+    if (!targetUser) {
+      res.status(401).send({ message: "Ошибка авторизации" });
+      return;
+    }
+    const isPasswordValid = await bcrypt.compare(password, targetUser.password);
+    if (!isPasswordValid) {
+      res.status(401).send({
+        message: "Ошибка авторизации",
+      });
+      return;
+    }
+
+    const token = jwt.sign({ _id: targetUser._id }, "!I_lova_my_job");
+    res.status(200).send({
+      token,
+    });
+  } catch (err) {
+    res.status(500).send({ message: "Ошибка на сервере" });
   }
 };

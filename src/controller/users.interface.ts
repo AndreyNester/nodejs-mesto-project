@@ -24,6 +24,12 @@ interface IUpdateAvatarResponse extends Omit<IUser, "password"> {
   _id: string;
 }
 
+interface ILoginRequest extends Pick<IUser, "password" | "email"> {}
+
+interface ILoginResponse {
+  token: string;
+}
+
 export type {
   ICreateuserResponse,
   ICreateuserRequest,
@@ -34,4 +40,6 @@ export type {
   IUpdateUserResponse,
   IUpdateAvatarRequest,
   IUpdateAvatarResponse,
+  ILoginRequest,
+  ILoginResponse,
 };
