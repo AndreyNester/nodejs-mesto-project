@@ -104,9 +104,6 @@ export const createUser: RequestHandler<
   } catch (err) {
     if (err instanceof AppError) {
       switch (err.name) {
-        case "Bad Request Error":
-          res.status(400).send({ message: "Не корректно переданы данные" });
-          break;
         default:
           res.status(500).send({ message: "Ошибка на сервере" });
       }
@@ -198,7 +195,9 @@ export const updateAvatar: RequestHandler<
     if (err instanceof AppError) {
       switch (err.name) {
         case "Not Found Error":
-          res.status(404).send({ message: "Не корректно переданы данные" });
+          res
+            .status(404)
+            .send({ message: "Пользователь с таким ID не найден" });
           break;
         default:
           res.status(500).send({ message: "Ошибка на сервере" });
