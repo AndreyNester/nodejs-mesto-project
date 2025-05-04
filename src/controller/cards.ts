@@ -70,20 +70,31 @@ export const deleteCard: RequestHandler<
   { id?: string },
   {
     message: string;
-  }
+  },
+  unknown,
+  unknown,
+  IAuthContext
 > = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id: cardId } = req.params;
+    const { _id: curUserId } = res.locals.currentUser;
 
-    if (!(id && mongoose.isValidObjectId(id))) {
+    if (!(cardId && mongoose.isValidObjectId(cardId))) {
       res.status(400).send({ message: "Не корректно переданы данные" });
       return;
     }
-    const deletedCard = await cardModel.findByIdAndDelete(id);
+    const deletedCard = await cardModel.findById(cardId);
     if (!deletedCard) {
       res.status(404).send({ message: "Карточка с таким ID не найдена" });
       return;
     }
+    if (deletedCard.owner.toString() !== curUserId) {
+      res
+        .status(403)
+        .send({ message: "У вас нет прав на удаление этой карточки" });
+      return;
+    }
+    await deletedCard.deleteOne();
     res.status(200).send({
       message: "Карточка успешно удалена",
     });
