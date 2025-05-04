@@ -41,7 +41,7 @@ export const createCard: RequestHandler<
 > = async (req, res) => {
   try {
     const { name, link } = req.body;
-    const { _id } = res.locals.user;
+    const { _id } = res.locals.currentUser;
 
     const createdCard = await cardModel.create({
       name,
@@ -105,7 +105,7 @@ export const likeCard: RequestHandler<
       return;
     }
 
-    const { _id } = res.locals.user;
+    const { _id } = res.locals.currentUser;
 
     const likedCard = await cardModel.findByIdAndUpdate(
       cardId,
@@ -147,7 +147,7 @@ export const unlikeCard: RequestHandler<
       res.status(400).send({ message: "Не корректно переданы данные" });
       return;
     }
-    const { _id } = res.locals.user;
+    const { _id } = res.locals.currentUser;
     const unlikedCard = await cardModel.findByIdAndUpdate(
       cardId,
       {

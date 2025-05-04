@@ -1,28 +1,24 @@
-import express, { NextFunction, Request, Response } from "express";
+import express from "express";
 import mongoose from "mongoose";
-import IAuthContext from "./types";
 import userRoutes from "./routes/users";
 import cardRoutes from "./routes/cards";
+import authRoutes from "./routes/auth";
+import authMiddleware from "./middlewares/auth";
 
 const { PORT = 3000 } = process.env;
 
 const app = express();
 
 app.use(express.json());
-app.use(
-  (_req: Request, res: Response<unknown, IAuthContext>, next: NextFunction) => {
-    res.locals.user = {
-      _id: "68132fa573ffc46f70b50c20",
-    };
-    next();
-  }
-);
-app.use("/", userRoutes);
-app.use("/", cardRoutes);
-app.use((req: Request, res: Response) => {
-  res.status(404).send({
-    message: "Такого ресурса не существует",
-  });
+
+// Публичные маршруты
+app.use("/", authRoutes);
+
+// Приватные роуты
+app.use("/users", authMiddleware, userRoutes);
+app.use("/cards", authMiddleware, cardRoutes);
+app.use((req, res) => {
+  res.status(404).json({ message: "Ресурс не найден" });
 });
 
 app.listen(PORT, () => {

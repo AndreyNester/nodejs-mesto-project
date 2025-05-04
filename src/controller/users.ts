@@ -121,7 +121,7 @@ export const updateUser: RequestHandler<
 > = async (req, res) => {
   try {
     const { name, about } = req.body;
-    const { _id } = res.locals.user;
+    const { _id } = res.locals.currentUser;
     const updatedUser = await userModel.findByIdAndUpdate(
       _id,
       {
@@ -161,7 +161,7 @@ export const updateAvatar: RequestHandler<
 > = async (req, res) => {
   try {
     const { avatar } = req.body;
-    const { _id } = res.locals.user;
+    const { _id } = res.locals.currentUser;
     const userWithUpdateddAvatar = await userModel.findByIdAndUpdate(
       _id,
       { $set: { avatar } },
@@ -206,8 +206,10 @@ export const login: RequestHandler<
       });
       return;
     }
-
-    const token = jwt.sign({ _id: targetUser._id }, "!I_lova_my_job");
+    const payload: IAuthContext["currentUser"] = {
+      _id: targetUser._id.toString(),
+    };
+    const token = jwt.sign(payload, "!I_lova_my_job");
     res.status(200).send({
       token,
     });

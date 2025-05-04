@@ -1,5 +1,5 @@
 export default interface IAuthContext {
-  user: {
+  currentUser: {
     _id: string;
   };
 }
