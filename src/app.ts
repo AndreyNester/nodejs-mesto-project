@@ -1,3 +1,4 @@
+import { isCelebrateError } from "celebrate";
 import express, { Response, Request, NextFunction } from "express";
 import mongoose from "mongoose";
 import userRoutes from "./routes/users";
@@ -22,10 +23,10 @@ app.use("/users", authMiddleware, userRoutes);
 app.use("/cards", authMiddleware, cardRoutes);
 
 app.use(errorLogger);
-app.use((req, res) => {
+app.use((_req, res) => {
   res.status(404).json({ message: "Ресурс не найден" });
 });
-
+// app.use(celebrateErrors());
 app.use(
   (
     err: unknown,
@@ -36,6 +37,10 @@ app.use(
   ) => {
     if (err instanceof AppError) {
       res.status(err.statusCode).send({ message: err.message });
+      return;
+    }
+    if (isCelebrateError(err)) {
+      res.status(400).send({ message: "Ошибка валидации" });
       return;
     }
     res.status(500).send({ message: "На сервере произошла ошибка" });
