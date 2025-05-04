@@ -1,10 +1,11 @@
-import express from "express";
+import express, { Response, Request } from "express";
 import mongoose from "mongoose";
 import userRoutes from "./routes/users";
 import cardRoutes from "./routes/cards";
 import authRoutes from "./routes/auth";
 import authMiddleware from "./middlewares/auth";
 import { requestLogger, errorLogger } from "./middlewares/logger";
+import AppError from "./config/appError";
 
 const { PORT = 3000 } = process.env;
 
@@ -23,6 +24,14 @@ app.use("/cards", authMiddleware, cardRoutes);
 app.use(errorLogger);
 app.use((req, res) => {
   res.status(404).json({ message: "Ресурс не найден" });
+});
+
+app.use((err: unknown, _req: Request, res: Response<{ message: string }>) => {
+  if (err instanceof AppError) {
+    res.status(err.statusCode).send({ message: err.message });
+    return;
+  }
+  res.status(500).send({ message: "На сервере произошла ошибка" });
 });
 
 app.listen(PORT, () => {
