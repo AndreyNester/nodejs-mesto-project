@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { celebrate } from "celebrate";
 import {
   getUsers,
   getUserById,
@@ -6,6 +7,11 @@ import {
   updateUser,
   getCurrentUser,
 } from "../controller/users";
+import {
+  getUserByIdValidationSchema,
+  updateAvatarValidationSchema,
+  updateUserValidationhSchema,
+} from "../controller/users.validation";
 
 const route = Router();
 
@@ -16,12 +22,16 @@ route.get("/", getUsers);
 route.get("/me", getCurrentUser);
 
 // GET /users/:userId - возвращает пользователя по _id
-route.get("/:id", getUserById);
+route.get("/:id", celebrate(getUserByIdValidationSchema), getUserById);
 
 // PATCH /users/me — обновляет профиль
-route.patch("/me", updateUser);
+route.patch("/me", celebrate(updateUserValidationhSchema), updateUser);
 
 // PATCH /users/me/avatar — обновляет аватар
-route.patch("/me/avatar", updateAvatar);
+route.patch(
+  "/me/avatar",
+  celebrate(updateAvatarValidationSchema),
+  updateAvatar
+);
 
 export default route;

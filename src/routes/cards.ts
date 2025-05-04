@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { celebrate } from "celebrate";
 import {
   createCard,
   deleteCard,
@@ -6,6 +7,10 @@ import {
   likeCard,
   unlikeCard,
 } from "../controller/cards";
+import {
+  createCardValidationSchema,
+  deleteCardValidationSchema,
+} from "../controller/cards.validation";
 
 const router = Router();
 
@@ -13,10 +18,10 @@ const router = Router();
 router.get("/", getCards);
 
 // POST /cards — создаёт карточку
-router.post("/", createCard);
+router.post("/", celebrate(createCardValidationSchema), createCard);
 
 // DELETE /cards/:cardId — удаляет карточку по идентификатору
-router.delete("/:id", deleteCard);
+router.delete("/:id", celebrate(deleteCardValidationSchema), deleteCard);
 
 // PUT /cards/:cardId/likes — поставить лайк карточке
 router.put("/:cardId/likes", likeCard);
