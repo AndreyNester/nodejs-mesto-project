@@ -195,7 +195,7 @@ export const login: RequestHandler<
 > = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const targetUser = await userModel.findOne({ email });
+    const targetUser = await userModel.findOne({ email }).select("+password");
     if (!targetUser) {
       res.status(401).send({ message: "Ошибка авторизации" });
       return;
