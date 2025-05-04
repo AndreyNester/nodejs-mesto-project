@@ -23,7 +23,7 @@ import {
 import BadRequestError from "../config/badRequestError";
 import NotFoundError from "../config/notFoundError";
 import AuthError from "../config/authError";
-import CustomError from "../config/customError";
+import ConflictError from "../config/conflictError";
 
 export const getUsers: RequestHandler<
   unknown,
@@ -68,11 +68,7 @@ export const getUserById: RequestHandler<
       email,
     });
   } catch (err) {
-    if (err instanceof mongoose.Error.ValidationError) {
-      next(new BadRequestError("Не корректно переданы данные"));
-    } else {
-      next(err);
-    }
+    next(err);
   }
 };
 
@@ -105,12 +101,7 @@ export const createUser: RequestHandler<
     if (err instanceof mongoose.Error.ValidationError) {
       next(new BadRequestError("Не корректно переданы данные"));
     } else if (isDuplicateKeyError(err)) {
-      next(
-        new CustomError({
-          message: "Такой email уже существует",
-          statusCode: 409,
-        })
-      );
+      next(new ConflictError("Такой email уже существует"));
     } else {
       next(err);
     }
@@ -138,6 +129,7 @@ export const updateUser: RequestHandler<
       { new: true, runValidators: true }
     );
     if (!updatedUser) {
+      // Вынуждены проводить лишнюю проверку чтобы сузить тип объекта updatedUser
       throw new NotFoundError("Человека с таким ID не существует");
     }
     res.status(200).send({
@@ -172,6 +164,7 @@ export const updateAvatar: RequestHandler<
       { new: true, runValidators: true }
     );
     if (!userWithUpdateddAvatar) {
+      // Вынуждены проводить лишнюю проверку чтобы сузить тип объекта updatedUser
       throw new NotFoundError("Пользователь с таким ID не найден");
     }
     res.status(200).send({
@@ -228,6 +221,7 @@ export const getCurrentUser: RequestHandler<
     const userId = res.locals.currentUser._id;
     const userFromDB = await userModel.findById(userId);
     if (!userFromDB) {
+      // Вынуждены проводить лишнюю проверку чтобы сузить тип объекта updatedUser
       throw new NotFoundError("Человека с такиим ID не существует");
     }
     res.status(200).send({

@@ -28,7 +28,7 @@ export const signInValidationSchema: ISchema = {
 
 export const getUserByIdValidationSchema: ISchema = {
   params: Joi.object().keys({
-    id: Joi.string().required(),
+    id: Joi.string().required().hex(),
   }),
 };
 

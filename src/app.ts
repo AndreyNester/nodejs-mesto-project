@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth";
 import authMiddleware from "./middlewares/auth";
 import { requestLogger, errorLogger } from "./middlewares/logger";
 import AppError from "./config/appError";
+import NotFoundError from "./config/notFoundError";
 
 const { PORT = 3000 } = process.env;
 
@@ -23,10 +24,13 @@ app.use("/users", authMiddleware, userRoutes);
 app.use("/cards", authMiddleware, cardRoutes);
 
 app.use(errorLogger);
-app.use((_req, res) => {
-  res.status(404).json({ message: "Ресурс не найден" });
+app.use((_req, res, next) => {
+  try {
+    throw new NotFoundError("Ресурс не найден");
+  } catch (err) {
+    next(err);
+  }
 });
-// app.use(celebrateErrors());
 app.use(
   (
     err: unknown,

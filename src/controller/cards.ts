@@ -12,7 +12,7 @@ import {
 } from "./cards.interface";
 import BadRequestError from "../config/badRequestError";
 import NotFoundError from "../config/notFoundError";
-import CustomError from "../config/customError";
+import ForbiddenError from "../config/forbiddenError";
 
 export const getCards: RequestHandler<
   unknown,
@@ -91,10 +91,7 @@ export const deleteCard: RequestHandler<
       throw new NotFoundError("Карточка с таким ID не найдена");
     }
     if (deletedCard.owner.toString() !== curUserId) {
-      throw new CustomError({
-        message: "У вас нет прав на удаление этой карточки",
-        statusCode: 403,
-      });
+      throw new ForbiddenError("У вас нет прав на удаление этой карточки");
     }
     await deletedCard.deleteOne();
     res.status(200).send({

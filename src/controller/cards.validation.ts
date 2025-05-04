@@ -13,18 +13,18 @@ export const createCardValidationSchema: ISchema = {
 
 export const deleteCardValidationSchema: ISchema = {
   params: Joi.object().keys({
-    id: Joi.string().alphanum().length(24),
+    id: Joi.string().alphanum().length(24).hex(),
   }),
 };
 
 export const likeCardValidationSchema: ISchema = {
   params: Joi.object().keys({
-    cardId: Joi.string().alphanum().length(24),
+    cardId: Joi.string().alphanum().length(24).hex(),
   }),
 };
 
 export const unlikeCardValidationSchema: ISchema = {
   params: Joi.object().keys({
-    cardId: Joi.string().alphanum().length(24),
+    cardId: Joi.string().alphanum().length(24).hex(),
   }),
 };
