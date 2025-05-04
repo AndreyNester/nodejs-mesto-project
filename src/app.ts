@@ -1,4 +1,4 @@
-import express, { Response, Request } from "express";
+import express, { Response, Request, NextFunction } from "express";
 import mongoose from "mongoose";
 import userRoutes from "./routes/users";
 import cardRoutes from "./routes/cards";
@@ -26,13 +26,21 @@ app.use((req, res) => {
   res.status(404).json({ message: "Ресурс не найден" });
 });
 
-app.use((err: unknown, _req: Request, res: Response<{ message: string }>) => {
-  if (err instanceof AppError) {
-    res.status(err.statusCode).send({ message: err.message });
-    return;
+app.use(
+  (
+    err: unknown,
+    _req: Request,
+    res: Response<{ message: string }>,
+    // eslint-disable-next-line no-unused-vars
+    _next: NextFunction
+  ) => {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).send({ message: err.message });
+      return;
+    }
+    res.status(500).send({ message: "На сервере произошла ошибка" });
   }
-  res.status(500).send({ message: "На сервере произошла ошибка" });
-});
+);
 
 app.listen(PORT, () => {
   console.log("Started server");

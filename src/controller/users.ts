@@ -5,6 +5,7 @@ import { RequestHandler } from "express";
 import mongoose from "mongoose";
 import IAuthContext from "../types";
 import userModel from "../model/user";
+import isDuplicateKeyError from "../utils/isDuplicateKeyError";
 import {
   ICreateuserRequest,
   ICreateuserResponse,
@@ -20,10 +21,15 @@ import {
   IGetCurrentUserResponse,
 } from "./users.interface";
 
+import BadRequestError from "../config/badRequestError";
+import NotFoundError from "../config/notFoundError";
+import AuthError from "../config/authError";
+import CustomError from "../config/customError";
+
 export const getUsers: RequestHandler<
   unknown,
   TGetUsersResponse | { message: string }
-> = async (_req, res) => {
+> = async (_req, res, next) => {
   try {
     const users = await userModel.find({});
     const preparedResponse: TGetUsersResponse = users.map<IGetUsersResItem>(
@@ -37,24 +43,22 @@ export const getUsers: RequestHandler<
     );
     res.status(200).send(preparedResponse);
   } catch (err) {
-    res.status(500).send({ message: "Ошибка на сервере" });
+    next(err);
   }
 };
 
 export const getUserById: RequestHandler<
   { id: string },
   IGetUserByIdResponse | { message: string }
-> = async (req, res) => {
+> = async (req, res, next) => {
   const { id: IdInParam } = req.params;
   try {
     if (!mongoose.isValidObjectId(IdInParam)) {
-      res.status(400).send({ message: "Не корректно переданы данные" });
-      return;
+      throw new BadRequestError("Не корректно переданы данные");
     }
     const user = await userModel.findById(IdInParam);
     if (!user) {
-      res.status(404).send({ message: "Человека с таким ID не существует" });
-      return;
+      throw new NotFoundError("Человека с таким ID не существует");
     }
     const { about, avatar, name, _id, email } = user;
     res.status(200).send({
@@ -66,9 +70,9 @@ export const getUserById: RequestHandler<
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
-      res.status(400).send({ message: "Не корректно переданы данные" });
+      next(new BadRequestError("Не корректно переданы данные"));
     } else {
-      res.status(500).send({ message: "Ошибка на сервере" });
+      next(err);
     }
   }
 };
@@ -77,14 +81,12 @@ export const createUser: RequestHandler<
   unknown,
   ICreateuserResponse | { message: string },
   ICreateuserRequest
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { about, avatar, name, email, password } = req.body;
 
-    // Валдируем email здесь чтобы лишний раз не хешировать пароль
-    if (!validator.isEmail(email)) {
-      res.status(400).send({ message: "Не корректно переданы данные" });
-      return;
+    if ((email && !validator.isEmail(email)) || !password) {
+      throw new BadRequestError("Не корректно переданы данные");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -106,9 +108,16 @@ export const createUser: RequestHandler<
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
-      res.status(400).send({ message: "Не корректно переданы данные" });
+      next(new BadRequestError("Не корректно переданы данные"));
+    } else if (isDuplicateKeyError(err)) {
+      next(
+        new CustomError({
+          message: "Такой email уже существует",
+          statusCode: 409,
+        })
+      );
     } else {
-      res.status(500).send({ message: "Ошибка на сервере" });
+      next(err);
     }
   }
 };
@@ -119,7 +128,7 @@ export const updateUser: RequestHandler<
   IUpdateUserRequest,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { name, about } = req.body;
     const { _id } = res.locals.currentUser;
@@ -134,8 +143,7 @@ export const updateUser: RequestHandler<
       { new: true, runValidators: true }
     );
     if (!updatedUser) {
-      res.status(404).send({ message: "Человека с таким ID не существует" });
-      return;
+      throw new NotFoundError("Человека с таким ID не существует");
     }
     res.status(200).send({
       about: updatedUser.about,
@@ -146,9 +154,9 @@ export const updateUser: RequestHandler<
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
-      res.status(400).send({ message: "не корректно переданы данные" });
+      next(new BadRequestError("не корректно переданы данные"));
     } else {
-      res.status(500).send({ message: "Ошибка на сервере" });
+      next(err);
     }
   }
 };
@@ -159,7 +167,7 @@ export const updateAvatar: RequestHandler<
   IUpdateAvatarRequest,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { avatar } = req.body;
     const { _id } = res.locals.currentUser;
@@ -169,8 +177,7 @@ export const updateAvatar: RequestHandler<
       { new: true, runValidators: true }
     );
     if (!userWithUpdateddAvatar) {
-      res.status(404).send({ message: "Пользователь с таким ID не найден" });
-      return;
+      throw new NotFoundError("Пользователь с таким ID не найден");
     }
     res.status(200).send({
       about: userWithUpdateddAvatar.about,
@@ -181,9 +188,9 @@ export const updateAvatar: RequestHandler<
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
-      res.status(400).send({ message: "не корректно переданы данные" });
+      next(new BadRequestError("не корректно переданы данные"));
     } else {
-      res.status(500).send({ message: "Ошибка на сервере" });
+      next(err);
     }
   }
 };
@@ -192,20 +199,16 @@ export const login: RequestHandler<
   unknown,
   ILoginResponse | { message: string },
   ILoginRequest
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const targetUser = await userModel.findOne({ email }).select("+password");
     if (!targetUser) {
-      res.status(401).send({ message: "Ошибка авторизации" });
-      return;
+      throw new AuthError("Ошибка авторизации");
     }
     const isPasswordValid = await bcrypt.compare(password, targetUser.password);
     if (!isPasswordValid) {
-      res.status(401).send({
-        message: "Ошибка авторизации",
-      });
-      return;
+      throw new AuthError("Ошибка авторизации");
     }
     const payload: IAuthContext["currentUser"] = {
       _id: targetUser._id.toString(),
@@ -215,7 +218,7 @@ export const login: RequestHandler<
       token,
     });
   } catch (err) {
-    res.status(500).send({ message: "Ошибка на сервере" });
+    next(err);
   }
 };
 
@@ -225,13 +228,12 @@ export const getCurrentUser: RequestHandler<
   unknown,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (_req, res, next) => {
   try {
     const userId = res.locals.currentUser._id;
     const userFromDB = await userModel.findById(userId);
     if (!userFromDB) {
-      res.status(404).send({ message: "Человека с такиим ID не существует" });
-      return;
+      throw new NotFoundError("Человека с такиим ID не существует");
     }
     res.status(200).send({
       about: userFromDB.about,
@@ -240,7 +242,7 @@ export const getCurrentUser: RequestHandler<
       name: userFromDB.name,
       _id: userFromDB.id,
     });
-  } catch (error) {
-    res.status(500).send({ message: "Что-то пошло не так" });
+  } catch (err) {
+    next(err);
   }
 };
