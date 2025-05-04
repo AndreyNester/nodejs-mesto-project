@@ -10,11 +10,14 @@ import {
   ILikeCardResponse,
   IUnlikeCardResponse,
 } from "./cards.interface";
+import BadRequestError from "../config/badRequestError";
+import NotFoundError from "../config/notFoundError";
+import CustomError from "../config/customError";
 
 export const getCards: RequestHandler<
   unknown,
   TGetCardResponse | { message: string }
-> = async (_req, res) => {
+> = async (_req, res, next) => {
   try {
     const cards = await cardModel.find({});
     const preparedResult = cards.map<IGetCard>(
@@ -28,17 +31,18 @@ export const getCards: RequestHandler<
       })
     );
     res.status(200).send(preparedResult);
-  } catch (_err) {
-    res.status(500).send({ message: "ошибка на сервере" });
+  } catch (err) {
+    next(err);
   }
 };
+
 export const createCard: RequestHandler<
   unknown,
   ICreateCardResponse | { message: string },
   ICreateCardRequest,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { name, link } = req.body;
     const { _id } = res.locals.currentUser;
@@ -59,47 +63,45 @@ export const createCard: RequestHandler<
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
-      res.status(400).send({ message: "Не корректно переданы данные" });
+      next(new BadRequestError("Не корректно переданы данные"));
     } else {
-      res.status(500).send({ message: "ошибка на сервере" });
+      next(err);
     }
   }
 };
 
 export const deleteCard: RequestHandler<
-  { id?: string },
+  { id: string },
   {
     message: string;
   },
   unknown,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { id: cardId } = req.params;
     const { _id: curUserId } = res.locals.currentUser;
 
-    if (!(cardId && mongoose.isValidObjectId(cardId))) {
-      res.status(400).send({ message: "Не корректно переданы данные" });
-      return;
+    if (!mongoose.isValidObjectId(cardId)) {
+      throw new BadRequestError("Не корректно переданы данные");
     }
     const deletedCard = await cardModel.findById(cardId);
     if (!deletedCard) {
-      res.status(404).send({ message: "Карточка с таким ID не найдена" });
-      return;
+      throw new NotFoundError("Карточка с таким ID не найдена");
     }
     if (deletedCard.owner.toString() !== curUserId) {
-      res
-        .status(403)
-        .send({ message: "У вас нет прав на удаление этой карточки" });
-      return;
+      throw new CustomError({
+        message: "У вас нет прав на удаление этой карточки",
+        statusCode: 403,
+      });
     }
     await deletedCard.deleteOne();
     res.status(200).send({
       message: "Карточка успешно удалена",
     });
   } catch (err) {
-    res.status(500).send({ message: "ошибка на сервере" });
+    next(err);
   }
 };
 export const likeCard: RequestHandler<
@@ -108,12 +110,11 @@ export const likeCard: RequestHandler<
   unknown,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { cardId } = req.params;
     if (!mongoose.isValidObjectId(cardId)) {
-      res.status(400).send({ message: "не корректно переданы данные" });
-      return;
+      throw new BadRequestError("не корректно переданы данные");
     }
 
     const { _id } = res.locals.currentUser;
@@ -124,8 +125,7 @@ export const likeCard: RequestHandler<
       { new: true, runValidators: true }
     );
     if (!likedCard) {
-      res.status(404).send({ message: "Карточка с таким ID не найдена" });
-      return;
+      throw new NotFoundError("Карточка с таким ID не найдена");
     }
 
     res.status(200).send({
@@ -138,25 +138,24 @@ export const likeCard: RequestHandler<
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
-      res.status(400).send({ message: "Не корректно передаены данные" });
+      next(new BadRequestError("Не корректно передаены данные"));
     } else {
-      res.status(500).send({ message: "ошибка на сервере" });
+      next(err);
     }
   }
 };
 
 export const unlikeCard: RequestHandler<
-  { cardId?: string },
+  { cardId: string },
   IUnlikeCardResponse | { message: string },
   unknown,
   unknown,
   IAuthContext
-> = async (req, res) => {
+> = async (req, res, next) => {
   try {
     const { cardId } = req.params;
-    if (!(cardId && mongoose.isValidObjectId(cardId))) {
-      res.status(400).send({ message: "Не корректно переданы данные" });
-      return;
+    if (!mongoose.isValidObjectId(cardId)) {
+      throw new BadRequestError("Не корректно переданы данные");
     }
     const { _id } = res.locals.currentUser;
     const unlikedCard = await cardModel.findByIdAndUpdate(
@@ -170,8 +169,7 @@ export const unlikeCard: RequestHandler<
     );
 
     if (!unlikedCard) {
-      res.status(404).send({ message: "Карточка с таким ID не найдена" });
-      return;
+      throw new NotFoundError("Карточка с таким ID не найдена");
     }
 
     res.status(200).send({
@@ -183,9 +181,9 @@ export const unlikeCard: RequestHandler<
     });
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
-      res.status(400).send({ message: "Не корректно переданы данные" });
+      next(new BadRequestError("Не корректно переданы данные"));
     } else {
-      res.status(500).send({ message: "ошибка на сервере" });
+      next(err);
     }
   }
 };

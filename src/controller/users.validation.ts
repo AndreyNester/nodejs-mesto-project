@@ -11,7 +11,7 @@ interface ISchema extends Partial<Record<TApiPart, Joi.ObjectSchema<any>>> {}
 
 export const createUserValidationSchema: ISchema = {
   body: Joi.object<ICreateuserRequest>({
-    password: Joi.string().min(6).required(),
+    password: Joi.string().min(8).required(),
 
     avatar: Joi.string().uri().optional(),
     name: Joi.string().min(2).max(30).optional(),

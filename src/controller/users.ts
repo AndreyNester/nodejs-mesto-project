@@ -1,4 +1,3 @@
-import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { RequestHandler } from "express";
@@ -84,10 +83,6 @@ export const createUser: RequestHandler<
 > = async (req, res, next) => {
   try {
     const { about, avatar, name, email, password } = req.body;
-
-    if ((email && !validator.isEmail(email)) || !password) {
-      throw new BadRequestError("Не корректно переданы данные");
-    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -213,7 +208,7 @@ export const login: RequestHandler<
     const payload: IAuthContext["currentUser"] = {
       _id: targetUser._id.toString(),
     };
-    const token = jwt.sign(payload, "!I_lova_my_job");
+    const token = jwt.sign(payload, "!I_lova_my_job", { expiresIn: "7d" });
     res.status(200).send({
       token,
     });

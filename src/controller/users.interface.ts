@@ -3,7 +3,7 @@ import { IUser } from "../model/user";
 interface ICreateuserResponse extends Omit<IUser, "password"> {
   _id: string;
 }
-interface ICreateuserRequest extends Partial<IUser> {}
+interface ICreateuserRequest extends IUser {}
 
 interface IGetUserByIdResponse extends Omit<IUser, "password"> {
   _id: string;
