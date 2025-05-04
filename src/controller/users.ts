@@ -17,6 +17,7 @@ import {
   IUpdateAvatarResponse,
   ILoginResponse,
   ILoginRequest,
+  IGetCurrentUserResponse,
 } from "./users.interface";
 
 export const getUsers: RequestHandler<
@@ -215,5 +216,31 @@ export const login: RequestHandler<
     });
   } catch (err) {
     res.status(500).send({ message: "Ошибка на сервере" });
+  }
+};
+
+export const getCurrentUser: RequestHandler<
+  unknown,
+  IGetCurrentUserResponse | { message: string },
+  unknown,
+  unknown,
+  IAuthContext
+> = async (req, res) => {
+  try {
+    const userId = res.locals.currentUser._id;
+    const userFromDB = await userModel.findById(userId);
+    if (!userFromDB) {
+      res.status(404).send({ message: "Человека с такиим ID не существует" });
+      return;
+    }
+    res.status(200).send({
+      about: userFromDB.about,
+      avatar: userFromDB.avatar,
+      email: userFromDB.email,
+      name: userFromDB.name,
+      _id: userFromDB.id,
+    });
+  } catch (error) {
+    res.status(500).send({ message: "Что-то пошло не так" });
   }
 };

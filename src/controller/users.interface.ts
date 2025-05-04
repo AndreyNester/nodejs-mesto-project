@@ -30,6 +30,10 @@ interface ILoginResponse {
   token: string;
 }
 
+interface IGetCurrentUserResponse extends Omit<IUser, "password"> {
+  _id: string;
+}
+
 export type {
   ICreateuserResponse,
   ICreateuserRequest,
@@ -42,4 +46,5 @@ export type {
   IUpdateAvatarResponse,
   ILoginRequest,
   ILoginResponse,
+  IGetCurrentUserResponse,
 };
