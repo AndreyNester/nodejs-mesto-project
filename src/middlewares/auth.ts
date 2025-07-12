@@ -16,7 +16,7 @@ const authMiddleware: RequestHandler<
       throw new AuthError("Требуется авторизация");
     }
     const token = rawToken.replace("Bearer ", "");
-    const tokenInfo = jwt.verify(token, "!I_lova_my_job");
+    const tokenInfo = jwt.verify(token, process.env.JWT_SECRET || "fnsejnf");
     res.locals.currentUser = tokenInfo as IAuthContext["currentUser"];
     next();
   } catch (err) {

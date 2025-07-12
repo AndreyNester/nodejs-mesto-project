@@ -201,7 +201,9 @@ export const login: RequestHandler<
     const payload: IAuthContext["currentUser"] = {
       _id: targetUser._id.toString(),
     };
-    const token = jwt.sign(payload, "!I_lova_my_job", { expiresIn: "7d" });
+    const token = jwt.sign(payload, process.env.JWT_SECRET || "fnsejnf", {
+      expiresIn: "7d",
+    });
     res.status(200).send({
       token,
     });

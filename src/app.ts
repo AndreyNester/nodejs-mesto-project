@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import { isCelebrateError } from "celebrate";
 import express, { Response, Request, NextFunction } from "express";
 import mongoose from "mongoose";
@@ -9,7 +10,10 @@ import { requestLogger, errorLogger } from "./middlewares/logger";
 import AppError from "./config/appError";
 import NotFoundError from "./config/notFoundError";
 
-const { PORT = 3000 } = process.env;
+// Загружает переменные из .env в process.env
+dotenv.config();
+
+const { PORT = process.env.PORT || 3000 } = process.env;
 
 const app = express();
 
@@ -52,10 +56,10 @@ app.use(
 );
 
 app.listen(PORT, () => {
-  console.log("Started server");
+  console.log(`Started server at localhost:${PORT}`);
 });
 
 // подключаемся к серверу MongoDB
-mongoose.connect("mongodb://localhost:27017/mestodb").then(() => {
-  console.log("db cconnected");
+mongoose.connect(process.env.MONGO_URI || "jj").then(() => {
+  console.log(`db cconnected at ${process.env.MONGO_URI || "jj"}`);
 });
