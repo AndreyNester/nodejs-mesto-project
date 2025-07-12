@@ -7,6 +7,12 @@ import {
 } from "../controller/users.validation";
 
 const route = Router();
+// краш роут
+route.get("/crash-test", () => {
+  setTimeout(() => {
+    throw new Error("Сервер сейчас упадёт");
+  }, 0);
+});
 
 // POST /signin — авторизация
 route.post("/signin", celebrate(signInValidationSchema), login);
