@@ -10,6 +10,7 @@ const {
   DEPLOY_REF,
   DEPLOY_PATH,
   DEPLOY_REPO,
+  NPM_PATH,
 } = process.env;
 
 module.exports = {
@@ -41,7 +42,7 @@ module.exports = {
       repo: DEPLOY_REPO,
       path: DEPLOY_PATH,
       "pre-deploy-local": `scp ./.env ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}`,
-      "post-deploy": "npm i && npm run build",
+      "post-deploy": `${NPM_PATH} i && npm run build`,
     },
   },
 };
