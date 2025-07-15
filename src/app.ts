@@ -1,3 +1,4 @@
+import cors from "cors";
 import dotenv from "dotenv";
 import { isCelebrateError } from "celebrate";
 import express, { Response, Request, NextFunction } from "express";
@@ -7,6 +8,7 @@ import cardRoutes from "./routes/cards";
 import authRoutes from "./routes/auth";
 import authMiddleware from "./middlewares/auth";
 import { requestLogger, errorLogger } from "./middlewares/logger";
+
 import AppError from "./config/appError";
 import NotFoundError from "./config/notFoundError";
 
@@ -16,6 +18,18 @@ dotenv.config();
 const { PORT = process.env.PORT || 3000 } = process.env;
 
 const app = express();
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://nesterok.frontend.nomorepartiessbs.ru",
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
