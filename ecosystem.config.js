@@ -35,49 +35,39 @@ module.exports = {
   ],
 
   deploy: {
-    production: [
-      // 🔧 BACKEND DEPLOY
-      {
-        name: "backend",
-        user: DEPLOY_USER,
-        host: DEPLOY_HOST,
-        ref: DEPLOY_REF,
-        repo: DEPLOY_REPO,
-        path: DEPLOY_PATH_BACKEND,
+    production: {
+      user: DEPLOY_USER,
+      host: DEPLOY_HOST,
+      ref: DEPLOY_REF,
+      repo: DEPLOY_REPO,
+      path: DEPLOY_PATH_BACKEND,
 
-        // копируем .env
-        "pre-deploy-local": `scp ./.env ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH_BACKEND}/shared/.env`,
+      "pre-deploy-local": `scp ./.env ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH_BACKEND}/shared/.env`,
 
-        "post-deploy": `
-          export ${NPM_PATH} &&
-          cd ${DEPLOY_PATH_BACKEND}/current &&
-          npm install &&
-          npm run build &&
-          pm2 reload ecosystem.config.js --only api-service --env production
-        `,
-      },
+      "post-deploy": `
+      export ${NPM_PATH} &&
+      cd ${DEPLOY_PATH_BACKEND}/current &&
+      npm install &&
+      npm run build &&
+      pm2 reload ecosystem.config.js --only api-service --env production
+    `,
+    },
 
-      // 🔧 FRONTEND DEPLOY (локально на сервере, не из Git)
-      {
-        name: "frontend",
-        user: DEPLOY_USER,
-        host: DEPLOY_HOST,
-        ref: "ignore",
-        repo: "noop", // фиктивный repo
-        path: DEPLOY_PATH_FRONTEND,
-
-        "pre-setup": "echo 'skip setup'",
-        "post-setup": "echo 'skip post-setup'",
-
-        "pre-deploy-local": "",
-        "pre-deploy": "echo 'skip pre-deploy'",
-        "post-deploy": `
-    export ${NPM_PATH} &&
-    cd ${DEPLOY_PATH_FRONTEND} &&
-    npm install &&
-    npm run build
-  `,
-      },
-    ],
+    frontend: {
+      user: DEPLOY_USER,
+      host: DEPLOY_HOST,
+      ref: "ignore",
+      repo: "noop",
+      path: DEPLOY_PATH_FRONTEND,
+      "pre-setup": "echo 'skip setup'",
+      "post-setup": "echo 'skip post-setup'",
+      "pre-deploy": "echo 'skip pre-deploy'",
+      "post-deploy": `
+      export ${NPM_PATH} &&
+      cd ${DEPLOY_PATH_FRONTEND} &&
+      npm install &&
+      npm run build
+    `,
+    },
   },
 };
