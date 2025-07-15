@@ -63,11 +63,12 @@ module.exports = {
       "post-setup": "echo 'skip post-setup'",
       "pre-deploy": "echo 'skip pre-deploy'",
       "post-deploy": `
-      export ${NPM_PATH} &&
-      cd ${DEPLOY_PATH_FRONTEND} &&
-      npm install &&
-      npm run build
-    `,
+  export ${NPM_PATH} &&
+  cd ${DEPLOY_PATH_BACKEND}/current &&
+  npm install &&
+  npm run build &&
+  pm2 reload ecosystem.config.js --only api-service --env production
+`,
     },
   },
 };
