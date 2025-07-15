@@ -21,6 +21,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:3000",
+  "http://nesterok.frontend.nomorepartiessbs.ru",
   "https://nesterok.frontend.nomorepartiessbs.ru",
 ];
 
