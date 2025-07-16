@@ -47,16 +47,16 @@ module.exports = {
       "post-deploy": `export ${NPM_PATH} && cd ${DEPLOY_PATH_FRONTEND} && npm i && npm run build && cd ${DEPLOY_PATH_BACKEND}/current && npm install && npm run build && pm2 reload ecosystem.config.js --only api-service --env production`,
     },
 
-    frontend: {
-      user: DEPLOY_USER,
-      host: DEPLOY_HOST,
-      ref: "ignore",
-      repo: "noop",
-      path: DEPLOY_PATH_FRONTEND,
-      "pre-setup": "echo 'skip setup'",
-      "post-setup": "echo 'skip post-setup'",
-      "pre-deploy": "echo 'skip pre-deploy'",
-      "post-deploy": `export ${NPM_PATH} && cd ${DEPLOY_PATH_FRONTEND} npm i && npm run build`,
-    },
+    // frontend: {
+    //   user: DEPLOY_USER,
+    //   host: DEPLOY_HOST,
+    //   ref: "ignore",
+    //   repo: "noop",
+    //   path: DEPLOY_PATH_FRONTEND,
+    //   "pre-setup": "echo 'skip setup'",
+    //   "post-setup": "echo 'skip post-setup'",
+    //   "pre-deploy": "echo 'skip pre-deploy'",
+    //   "post-deploy": `export ${NPM_PATH} && cd ${DEPLOY_PATH_FRONTEND} npm i && npm run build`,
+    // },
   },
 };
