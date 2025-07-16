@@ -44,7 +44,7 @@ module.exports = {
 
       "pre-deploy-local": `scp ./.env ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH_BACKEND}/shared/.env`,
 
-      "post-deploy": `export ${NPM_PATH} && cd ${DEPLOY_PATH_BACKEND}/current && npm install && npm run build && pm2 reload ecosystem.config.js --only api-service --env production`,
+      "post-deploy": `export ${NPM_PATH} && cd ${DEPLOY_PATH_FRONTEND} npm i && npm run build && cd ${DEPLOY_PATH_BACKEND}/current && npm install && npm run build && pm2 reload ecosystem.config.js --only api-service --env production`,
     },
 
     frontend: {
